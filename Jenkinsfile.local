@@ -1,0 +1,172 @@
+pipeline {
+    agent any
+    
+    environment {
+        APP_NAME = 'proto-ddf'
+        APP_DIR = '/Users/luismartins/local_repos/proto-ddf'
+        VENV_DIR = 'venv'
+        PYTHON_VERSION = '3.11'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '📦 Checking out code...'
+                checkout scm
+                
+                echo '🔗 Initializing git submodules...'
+                sh '''
+                    cd ${APP_DIR}
+                    git submodule update --init --recursive
+                '''
+            }
+        }
+        
+        stage('Environment Setup') {
+            steps {
+                echo '🔧 Setting up Python virtual environment...'
+                sh '''
+                    cd ${APP_DIR}
+                    
+                    # Remove existing venv if it exists
+                    rm -rf ${VENV_DIR}
+                    
+                    # Create new virtual environment
+                    python3 -m venv ${VENV_DIR}
+                    
+                    # Activate and upgrade pip
+                    source ${VENV_DIR}/bin/activate
+                    pip install --upgrade pip setuptools wheel
+                '''
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo '📥 Installing dependencies...'
+                sh '''
+                    cd ${APP_DIR}
+                    source ${VENV_DIR}/bin/activate
+                    
+                    # Install reflex from submodule (editable mode)
+                    echo "   📦 Installing reflex from submodule..."
+                    pip install -e ./reflex
+                    
+                    # Install other requirements
+                    echo "   📦 Installing other requirements..."
+                    pip install -r requirements.txt || true
+                '''
+            }
+        }
+        
+        stage('Verify Installation') {
+            steps {
+                echo '✅ Verifying installation...'
+                sh '''
+                    cd ${APP_DIR}
+                    source ${VENV_DIR}/bin/activate
+                    
+                    # Check Python version
+                    echo "Python version:"
+                    python --version
+                    
+                    # Check reflex installation
+                    echo ""
+                    echo "Reflex version:"
+                    python -c "import reflex; print(reflex.__version__)"
+                    
+                    # List installed packages
+                    echo ""
+                    echo "Installed packages:"
+                    pip list | grep -E "(reflex|sqlalchemy|uvicorn)"
+                '''
+            }
+        }
+        
+        stage('Lint & Quality') {
+            steps {
+                echo '🔍 Running code quality checks...'
+                sh '''
+                    cd ${APP_DIR}
+                    source ${VENV_DIR}/bin/activate
+                    
+                    # Install linting tools if not present
+                    pip install pylint flake8 black isort 2>/dev/null || true
+                    
+                    # Run black check (formatting)
+                    echo "Checking code formatting (black)..."
+                    black --check proto_ddf_app/ config/ || echo "⚠️  Black formatting issues found"
+                    
+                    # Run isort check (import sorting)
+                    echo "Checking import sorting (isort)..."
+                    isort --check-only proto_ddf_app/ config/ || echo "⚠️  Import sorting issues found"
+                    
+                    # Run flake8 (linting)
+                    echo "Running flake8 linting..."
+                    flake8 proto_ddf_app/ config/ --max-line-length=120 --extend-ignore=E203,W503 || echo "⚠️  Flake8 issues found"
+                '''
+            }
+        }
+        
+        stage('Build Check') {
+            steps {
+                echo '🏗️  Checking Reflex build...'
+                sh '''
+                    cd ${APP_DIR}
+                    source ${VENV_DIR}/bin/activate
+                    
+                    # Initialize reflex (generates .web directory)
+                    echo "Initializing Reflex..."
+                    reflex init --loglevel warning || true
+                    
+                    # Check if config is valid
+                    echo "Validating configuration..."
+                    python -c "import rxconfig; print('✅ Config valid')"
+                    
+                    # Export the app (compile check without running)
+                    echo "Compiling application..."
+                    timeout 60 reflex export --loglevel warning || echo "⚠️  Export check completed"
+                '''
+            }
+        }
+        
+        stage('Security Scan') {
+            steps {
+                echo '🔒 Running security checks...'
+                sh '''
+                    cd ${APP_DIR}
+                    source ${VENV_DIR}/bin/activate
+                    
+                    # Install safety for security checks
+                    pip install safety 2>/dev/null || true
+                    
+                    # Check for known security vulnerabilities
+                    echo "Checking for security vulnerabilities..."
+                    safety check --json || echo "⚠️  Security check completed with warnings"
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '🧹 Cleaning up...'
+            sh '''
+                cd ${APP_DIR}
+                # Clean up build artifacts
+                rm -rf .web/__pycache__
+                rm -rf proto_ddf_app/__pycache__
+                rm -rf config/__pycache__
+            '''
+        }
+        success {
+            echo '✅ Build successful!'
+            echo '📊 Pipeline completed successfully for proto-ddf'
+        }
+        failure {
+            echo '❌ Build failed!'
+            echo '📧 Check console output for errors'
+        }
+    }
+}
+

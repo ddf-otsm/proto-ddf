@@ -1,6 +1,45 @@
-.web
-*.db
 assets/external/
-*.py[cod]
-__pycache__/
+.web
 .states
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Reflex
+.web/
+*.db
+generated/*/.web/
+generated/*/*.db
+generated/*/*.log
+
+# Logs
+*.log
+debug_output.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local configuration
+.env
+.env.local
+config/.port_config.json
+
+# Jenkins
+jenkins_admin_password*.txt
+.jenkins/
+jenkins.pid
+jenkins.log

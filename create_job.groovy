@@ -1,0 +1,6 @@
+def job = Jenkins.instance.createProject(org.jenkinsci.plugins.workflow.job.WorkflowJob, 'proto-ddf-local')
+job.setDescription('CI/CD Pipeline for proto-ddf')
+def scm = new hudson.plugins.git.GitSCM('file:///Users/luismartins/local_repos/proto-ddf')
+def flow = new org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition(scm, 'Jenkinsfile.local')
+job.setDefinition(flow)
+job.save()
