@@ -1,0 +1,195 @@
+---
+description: "USE WHEN working with build processes, deployment automation, or service management to ensure proper practices"
+globs: ["**/*.sh", "**/*.js", "**/*.ts", "**/*.py", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: false
+---
+
+# BUILD AND DEPLOYMENT
+
+## Build Error Resolution Methodology
+
+### Systematic Error Resolution
+- **Resolve ALL build and compilation errors** systematically at once
+- **Don't fix errors one by one** - address root causes comprehensively
+- **Test after each major fix** to ensure no new issues are introduced
+- **Document error patterns** and solutions for future reference
+
+### Build Error Categories
+1. **Compilation Errors**: Syntax errors, type mismatches, missing imports
+2. **Dependency Errors**: Missing packages, version conflicts, circular dependencies
+3. **Configuration Errors**: Invalid settings, missing environment variables
+4. **Asset Errors**: Missing files, incorrect paths, build artifact issues
+
+### Error Resolution Process
+```bash
+# 1. Collect all error information
+timeout 60 npm run build 2>&1 | tee build-errors.log
+
+# 2. Analyze error patterns
+timeout 10 grep -E "(ERROR|FAIL)" build-errors.log
+
+# 3. Fix systematically by category
+# 4. Test after each category of fixes
+timeout 60 npm run build
+
+# 5. Verify no new errors introduced
+timeout 180 npm test
+```
+
+## Dry-Run First Principle
+
+### Mandatory Dry-Run Pattern
+- **ALWAYS execute dry-run** before any potentially destructive operation
+- **Review dry-run output** carefully before proceeding
+- **Verify expected changes** match actual requirements
+- **Document dry-run results** for audit purposes
+
+### Dry-Run Implementation
+```bash
+# ✅ MANDATORY: Infrastructure changes
+timeout 120 terraform plan -out=tfplan
+# Review plan before apply
+timeout 300 terraform apply tfplan
+
+# ✅ MANDATORY: Database migrations
+timeout 60 python manage.py migrate --dry-run
+# Review migration plan
+timeout 120 python manage.py migrate
+
+# ✅ MANDATORY: Package updates
+timeout 30 npm outdated
+# Review update plan
+timeout 120 npm update
+```
+
+### Dry-Run Validation Checklist
+- [ ] Dry-run executed successfully
+- [ ] Output reviewed and approved
+- [ ] No unexpected changes identified
+- [ ] Dependencies and side effects considered
+- [ ] Rollback plan prepared if needed
+
+## Central `run.sh` Interface
+
+### Standardized Entry Point
+- **Use `workflows/run.sh`** as the main application entry point
+- **Consistent flag interface** across all operations
+- **Centralized configuration management** through the runner
+- **Unified logging and monitoring** through single interface
+
+### Standard Run Script Usage
+```bash
+# ✅ CORRECT: Standard application startup
+timeout 300 bash workflows/run.sh --platform=local-macos --env=dev --tolerant --verbose --debug --full --test
+
+# ✅ CORRECT: Platform-specific execution
+timeout 300 bash workflows/run.sh --platform=local-docker --env=staging
+timeout 300 bash workflows/run.sh --platform=cloud-aws --env=prod
+
+# ✅ CORRECT: Mode-specific execution
+timeout 180 bash workflows/run.sh --mode=turbo    # Fast startup
+timeout 240 bash workflows/run.sh --mode=fast     # Balanced
+timeout 300 bash workflows/run.sh --mode=full     # Complete setup
+```
+
+### Run Script Flags
+- **Platform flags**: `--platform=local-macos|local-docker|cloud-aws|cloud-gcp`
+- **Environment flags**: `--env=dev|staging|prod|local`
+- **Mode flags**: `--mode=turbo|fast|full`
+- **Behavior flags**: `--tolerant`, `--verbose`, `--debug`, `--test`
+
+## Service Startups
+
+### Service Management Best Practices
+- **Use centralized service registry** for service discovery
+- **Implement health checks** for all services
+- **Graceful startup and shutdown** procedures
+- **Dependency ordering** for service initialization
+
+### Service Startup Patterns
+```bash
+# ✅ GOOD: Background service startup with verification
+timeout 60 python services/llm_service.py &
+sleep 5
+timeout 10 curl http://localhost:8000/health
+
+# ✅ GOOD: Service startup with dependency checks
+timeout 30 bash scripts/check-dependencies.sh
+timeout 60 python services/database_service.py &
+timeout 60 python services/api_service.py &
+```
+
+### Service Registry Management
+- **Register services** in `run/service_registry.json`
+- **Track service ports** in `run/port_registry.json`
+- **Avoid port conflicts** through centralized port management
+- **Use random ports** when possible to prevent collisions
+
+## Deployment Automation
+
+### Deployment Safety Measures
+- **Always test deployments** in staging before production
+- **Implement blue-green deployments** for zero-downtime updates
+- **Maintain deployment rollback procedures** for quick recovery
+- **Monitor deployment health** throughout the process
+
+### Automated Deployment Pipeline
+```bash
+# 1. Pre-deployment validation
+timeout 300 bash tests/run_tests.sh --all
+timeout 60 bash scripts/validate-deployment.sh
+
+# 2. Staging deployment
+timeout 600 bash workflows/deploy.sh --env=staging --dry-run
+timeout 900 bash workflows/deploy.sh --env=staging
+
+# 3. Production deployment (after staging validation)
+timeout 600 bash workflows/deploy.sh --env=prod --dry-run
+timeout 1200 bash workflows/deploy.sh --env=prod
+```
+
+## Build Optimization
+
+### Build Performance
+- **Implement build caching** to reduce build times
+- **Parallelize build tasks** where possible
+- **Optimize dependencies** to minimize bundle size
+- **Use incremental builds** for faster iteration
+
+### Build Artifact Management
+- **Store build artifacts** in appropriate locations
+- **Implement artifact versioning** for traceability
+- **Clean up old artifacts** to manage disk space
+- **Validate build artifacts** before deployment
+
+## Monitoring and Health Checks
+
+### Build Monitoring
+- **Monitor build success rates** and failure patterns
+- **Track build performance** and optimization opportunities
+- **Alert on build failures** for immediate attention
+- **Maintain build history** for trend analysis
+
+### Service Health Monitoring
+- **Implement comprehensive health checks** for all services
+- **Monitor service dependencies** and their health
+- **Set up automated alerting** for service failures
+- **Maintain service uptime metrics** and SLA tracking
+
+## Emergency Procedures
+
+### Build Failure Recovery
+1. **Identify the scope** of the build failure
+2. **Check recent changes** that might have caused the issue
+3. **Revert problematic changes** if necessary
+4. **Implement hotfixes** for critical issues
+5. **Validate fixes** through comprehensive testing
+
+### Deployment Rollback
+1. **Detect deployment issues** through monitoring
+2. **Execute rollback procedure** to previous stable version
+3. **Verify rollback success** through health checks
+4. **Investigate root cause** of deployment failure
+5. **Implement preventive measures** for future deployments
+
+This rule consolidates all build processes, deployment automation, service management, and operational procedures.

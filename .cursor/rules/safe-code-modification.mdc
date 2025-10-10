@@ -1,0 +1,367 @@
+---
+description: "USE WHEN modifying existing code to prevent corruption and ensure safe modification practices"
+globs:
+  [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.py",
+    "**/*.sh",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.json",
+  ]
+alwaysApply: true
+---
+
+# Safe Code Modification Rule
+
+## Core Safety Principles
+
+### Never Corrupt Existing Code
+
+**NEVER introduce malformed syntax, duplicate code blocks, or broken patterns when modifying existing files.**
+
+## Prohibited Modification Patterns
+
+### ❌ Code Corruption Patterns
+
+```bash
+# FORBIDDEN: Malformed sed patterns that create syntax errors
+sed -i 's/old_pattern/new && broken syntax/g' file.ts
+
+# FORBIDDEN: Complex regex replacements without validation
+sed -i 's/complex.*pattern.*with.*groups/replacement/g' file.ts
+
+# FORBIDDEN: Chained sed operations that can break syntax
+sed -i 's/pattern1/replacement1/g; s/pattern2/replacement2/g' file.ts
+
+# FORBIDDEN: Unsafe replacements that duplicate content
+sed -i 's/line/line\nline/g' file.ts  # Creates duplicates
+```
+
+### ❌ Unsafe Bulk Operations
+
+```bash
+# FORBIDDEN: Mass replacements without testing
+find . -name "*.ts" -exec sed -i 's/old/new/g' {} \;
+
+# FORBIDDEN: Complex pattern replacements across all files
+grep -rl "pattern" . | xargs sed -i 's/complex_pattern/replacement/g'
+
+# FORBIDDEN: Automated fixes without syntax validation
+apply_mass_changes && echo "Done"  # No validation
+```
+
+## Required Safe Modification Practices
+
+### ✅ Safe File Modification Pattern
+
+```bash
+# 1. ALWAYS backup before modification
+backup_file() {
+    local file="$1"
+    local backup_dir=".tmp/backups/$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    cp "$file" "$backup_dir/$(basename "$file")"
+    echo "Backed up: $file -> $backup_dir/$(basename "$file")"
+}
+
+# 2. ALWAYS validate syntax after changes
+validate_file_syntax() {
+    local file="$1"
+    case "$file" in
+        *.ts|*.tsx)
+            timeout 30 npx tsc --noEmit "$file" 2>/dev/null
+            ;;
+        *.js|*.jsx)
+            timeout 30 node -c "$file" 2>/dev/null
+            ;;
+        *.sh)
+            timeout 30 bash -n "$file" 2>/dev/null
+            ;;
+        *.json)
+            timeout 10 jq empty "$file" 2>/dev/null
+            ;;
+    esac
+}
+
+# 3. ALWAYS use safe modification wrapper
+safe_modify_file() {
+    local file="$1"
+    local modification_func="$2"
+
+    # Backup original
+    backup_file "$file"
+
+    # Apply modification
+    if $modification_func "$file"; then
+        # Validate result
+        if validate_file_syntax "$file"; then
+            echo "✅ Successfully modified: $file"
+            return 0
+        else
+            echo "❌ Syntax validation failed for: $file"
+            restore_backup "$file"
+            return 1
+        fi
+    else
+        echo "❌ Modification failed for: $file"
+        restore_backup "$file"
+        return 1
+    fi
+}
+```
+
+### ✅ Safe Pattern Replacement
+
+```bash
+# Use targeted, validated replacements
+safe_replace_pattern() {
+    local file="$1"
+    local pattern="$2"
+    local replacement="$3"
+
+    # Check if pattern exists
+    if ! grep -q "$pattern" "$file"; then
+        echo "Pattern not found in $file: $pattern"
+        return 1
+    fi
+
+    # Count matches
+    local match_count=$(grep -c "$pattern" "$file")
+    echo "Found $match_count matches for pattern in $file"
+
+    # Apply replacement with backup
+    sed -i.bak "s/$pattern/$replacement/g" "$file"
+
+    # Validate result
+    if validate_file_syntax "$file"; then
+        rm "$file.bak"
+        echo "✅ Pattern replacement successful in $file"
+        return 0
+    else
+        mv "$file.bak" "$file"
+        echo "❌ Pattern replacement failed - restored original $file"
+        return 1
+    fi
+}
+```
+
+### ✅ Progressive Testing Approach
+
+```bash
+# Test modifications on sample files first
+test_modification_on_samples() {
+    local modification_func="$1"
+    local sample_files=("$@")
+
+    echo "🧪 Testing modification on sample files..."
+
+    for file in "${sample_files[@]:1}"; do  # Skip first element (function name)
+        echo "Testing: $file"
+        if ! safe_modify_file "$file" "$modification_func"; then
+            echo "❌ Sample testing failed on: $file"
+            return 1
+        fi
+    done
+
+    echo "✅ All sample files passed - safe to proceed"
+    return 0
+}
+```
+
+## Code Quality Requirements
+
+### Syntax Validation
+
+```bash
+# MANDATORY: Always validate syntax after modifications
+validate_all_syntax() {
+    local failed_files=()
+
+    echo "🔧 Validating syntax for all modified files..."
+
+    # TypeScript files
+    if ! timeout 120 npx tsc --noEmit; then
+        echo "❌ TypeScript compilation failed"
+        failed_files+=("TypeScript files")
+    fi
+
+    # JavaScript files
+    for js_file in $(find . -name "*.js" -not -path "*/node_modules/*"); do
+        if ! timeout 10 node -c "$js_file" 2>/dev/null; then
+            failed_files+=("$js_file")
+        fi
+    done
+
+    # Shell scripts
+    for sh_file in $(find . -name "*.sh" -not -path "*/node_modules/*"); do
+        if ! timeout 10 bash -n "$sh_file" 2>/dev/null; then
+            failed_files+=("$sh_file")
+        fi
+    done
+
+    if [[ ${#failed_files[@]} -gt 0 ]]; then
+        echo "❌ Syntax validation failed for:"
+        printf "   - %s\n" "${failed_files[@]}"
+        return 1
+    fi
+
+    echo "✅ All syntax validation passed"
+    return 0
+}
+```
+
+### Content Integrity Checks
+
+```bash
+# MANDATORY: Check for code corruption patterns
+check_code_integrity() {
+    local file="$1"
+    local corruption_patterns=(
+        "as const as const"          # Duplicate type assertions
+        "function.*function"         # Duplicate function keywords
+        "import.*import"             # Duplicate imports
+        "undefined.*undefined"       # Malformed undefined checks
+        "}}}"                        # Extra closing braces
+        ";;;"                        # Extra semicolons
+        "console\.log.*console\.log" # Duplicate console.logs
+    )
+
+    for pattern in "${corruption_patterns[@]}"; do
+        if grep -q "$pattern" "$file"; then
+            echo "❌ Code corruption detected in $file: $pattern"
+            return 1
+        fi
+    done
+
+    echo "✅ Code integrity check passed for $file"
+    return 0
+}
+```
+
+### Rollback Mechanisms
+
+```bash
+# MANDATORY: Always provide rollback capability
+create_rollback_point() {
+    local description="$1"
+    local rollback_dir=".tmp/rollback_$(date +%Y%m%d_%H%M%S)"
+
+    mkdir -p "$rollback_dir"
+
+    # Backup all tracked files
+    git ls-files | while read -r file; do
+        mkdir -p "$rollback_dir/$(dirname "$file")"
+        cp "$file" "$rollback_dir/$file"
+    done
+
+    echo "$description" > "$rollback_dir/description.txt"
+    echo "📁 Rollback point created: $rollback_dir"
+    echo "$rollback_dir" > .last_rollback_point
+}
+
+rollback_to_last_point() {
+    if [[ ! -f .last_rollback_point ]]; then
+        echo "❌ No rollback point available"
+        return 1
+    fi
+
+    local rollback_dir=$(cat .last_rollback_point)
+
+    if [[ ! -d "$rollback_dir" ]]; then
+        echo "❌ Rollback directory not found: $rollback_dir"
+        return 1
+    fi
+
+    echo "🔄 Rolling back to: $(cat "$rollback_dir/description.txt")"
+
+    # Restore all files
+    find "$rollback_dir" -type f -not -name "description.txt" | while read -r backup_file; do
+        local relative_path="${backup_file#$rollback_dir/}"
+        cp "$backup_file" "$relative_path"
+    done
+
+    echo "✅ Rollback completed"
+}
+```
+
+## Error Prevention Strategies
+
+### Pre-Modification Checks
+
+```bash
+# Run before any code modifications
+pre_modification_safety_check() {
+    echo "🛡️  Running pre-modification safety checks..."
+
+    # Check git status
+    if [[ $(git status --porcelain) ]]; then
+        echo "⚠️  Uncommitted changes detected"
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 0
+        fi
+    fi
+
+    # Check current compilation status
+    if ! timeout 60 npx tsc --noEmit >/dev/null 2>&1; then
+        echo "⚠️  TypeScript compilation already has errors"
+        echo "    Modifications may mask or worsen existing issues"
+    fi
+
+    # Check for existing syntax errors
+    local syntax_errors=$(find . -name "*.js" -not -path "*/node_modules/*" -exec node -c {} \; 2>&1 | wc -l)
+    if [[ $syntax_errors -gt 0 ]]; then
+        echo "⚠️  $syntax_errors JavaScript syntax errors detected"
+    fi
+
+    echo "✅ Pre-modification checks completed"
+}
+```
+
+### Post-Modification Validation
+
+```bash
+# Run after any code modifications
+post_modification_validation() {
+    echo "🔍 Running post-modification validation..."
+
+    # Check for syntax errors
+    if ! validate_all_syntax; then
+        echo "❌ Post-modification syntax validation failed"
+        return 1
+    fi
+
+    # Check for code corruption
+    find . -name "*.ts" -o -name "*.js" -not -path "*/node_modules/*" | while read -r file; do
+        if ! check_code_integrity "$file"; then
+            echo "❌ Code integrity check failed"
+            return 1
+        fi
+    done
+
+    # Run basic tests if available
+    if [[ -f "package.json" ]] && command -v npm >/dev/null; then
+        echo "🧪 Running basic test validation..."
+        timeout 180 npm test >/dev/null 2>&1 || echo "⚠️  Some tests may need updating"
+    fi
+
+    echo "✅ Post-modification validation completed"
+}
+```
+
+---
+
+## Summary
+
+**The golden rule: Always validate, never corrupt, always provide rollback.**
+
+This rule ensures:
+
+- 🛡️ **Safety**: No syntax corruption or broken code
+- 🔍 **Validation**: Every change is checked for correctness
+- 🧪 **Testing**: Progressive validation on samples first
+- 📊 **Monitoring**: Track integrity throughout modifications
+- 🔄 **Recovery**: Always have a way to undo changes

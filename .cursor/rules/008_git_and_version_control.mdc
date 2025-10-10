@@ -1,0 +1,129 @@
+---
+description: "USE WHEN performing git operations to ensure proper git sync workflow and avoid destructive commands"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: false
+---
+
+# GIT AND VERSION CONTROL
+
+## Git Sync Workflow
+
+### Purpose
+The `git sync` command is a custom workflow used in this project to synchronize local changes with the remote repository.
+
+### Workflow Steps
+The git sync workflow performs the following operations:
+
+1. **Commit all staged changes** (with pre-commit hooks)
+   - All pre-commit hooks must pass (no --no-verify)
+   - Fix any linting, formatting, or test errors before committing
+
+2. **Pull latest changes from origin**
+   - Use `git pull origin <branch> --rebase` to avoid merge commits
+   - Resolve any conflicts if they occur
+
+3. **Push changes to remote**
+   - Use `git push origin <branch>`
+   - Pre-push hooks will run automatically
+
+### Safe Git Operations Pattern
+```bash
+# Stage changes
+timeout 10 git add -A
+
+# Commit with all pre-commit checks
+timeout 30 git commit -m "fix: update configuration"
+
+# Pull latest changes
+timeout 30 git pull origin <branch> --rebase
+
+# Push to remote
+timeout 30 git push origin <branch>
+```
+
+## Commit Strategy
+
+### Conventional Commits
+- **MUST** follow Conventional Commits specification
+- **Prefix** commit messages with types: `feat:`, `fix:`, `chore:`, `docs:`, `style:`, `refactor:`, `test:`
+- **Keep messages short** (under 100 characters)
+- **No newlines** in commit messages
+- **No emojis** in commit messages
+- **Examples**:
+  - `fix: resolve authentication timeout issue`
+  - `feat: add user profile management`
+  - `chore: update dependencies to latest versions`
+
+### Commit Discipline
+- **Group commits by logical changes** - don't commit everything at once
+- **One logical change per commit** for better history tracking
+- **Test before committing** - ensure all tests pass
+- **Review changes** before committing using `git diff --staged`
+
+## Pre-commit and Pre-push Requirements
+
+### Mandatory Hook Compliance
+- **NEVER use `--no-verify`** flag with git commit
+- **NEVER use `--no-verify`** flag with git push
+- **ALWAYS fix hook errors** instead of bypassing them
+- **All commits and pushes must pass** pre-commit and pre-push hooks
+- **Include linter and test checks** in the hook validation
+
+### Environment Variables for Health Checks
+- Use `EMERGENCY_HEALTH_CHECK_SKIP=1` environment variable to skip health checks when services aren't running during commits
+- Only use this for emergency situations when services are deliberately stopped
+
+## Git Safety Rules
+
+### Prohibited Commands
+- **NEVER use `git reset --hard`** without explicit user authorization
+- **NEVER use `git reset HEAD`** to prevent destructive history changes
+- **NEVER force push** without explicit authorization
+- **NEVER rewrite published history** without team agreement
+
+### Safe Alternatives
+- **Instead of `git reset --hard`**: Use `git stash` to save work, then `git checkout`
+- **Instead of force push**: Use `git pull --rebase` then normal push
+- **For undoing commits**: Use `git revert` instead of `git reset`
+
+### Git Stash Best Practices
+- **Always use `git stash apply`** instead of `git stash pop`
+- **Verify changes** with `git status` and `git diff` before running `git stash drop`
+- **Never use `git stash pop`** to prevent accidental stash loss
+
+## Branch Management
+
+### Branch Naming Convention
+- Use descriptive, kebab-case names
+- Include issue numbers when applicable
+- Examples: `feature/user-authentication`, `fix/login-timeout`, `chore/update-deps`
+
+### Branch Protection
+- **Never bypass branch protection** without authorization
+- **Follow code review requirements** for protected branches
+- **Ensure CI/CD passes** before merging
+
+## Git Command Timeouts
+All git commands must use appropriate timeouts:
+- **Basic operations**: 5-10 seconds (`git status`, `git add`)
+- **Commit operations**: 10-30 seconds
+- **Network operations**: 30-60 seconds (`git pull`, `git push`, `git fetch`)
+- **Clone operations**: 60-300 seconds depending on repository size
+
+## Merge and Integration
+
+### Merge Requirements
+- **Only merge if test coverage and success rate are not degraded**
+- **Sync your branch and push changes first**
+- **Proceed with merge only if metrics have not decreased**
+- **Use `git pull --rebase`** to maintain clean history
+
+### Integration Workflow
+1. Ensure all tests pass locally
+2. Push feature branch to remote
+3. Create pull request with descriptive title and body
+4. Wait for CI/CD validation
+5. Address any review feedback
+6. Merge only after all checks pass
+
+This rule consolidates all git workflow, version control, and repository management practices.

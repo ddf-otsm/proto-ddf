@@ -1,0 +1,166 @@
+---
+description: "USE WHEN implementing logging, error handling, or monitoring to ensure proper observability practices"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: false
+---
+
+# LOGGING AND MONITORING
+
+## Structured Logging Standards
+
+### File Logs
+- **Format**: Structured JSON `{ts, level, msg, script, pid}`
+- **Rotation**: Daily or at 10 MB file size
+- **Location**: Centralized logging directory
+- **Retention**: Follow project retention policies
+
+### Console Logs
+- **stdout/stderr** for CLI & CI environments
+- **Human-readable format** for development
+- **Machine-readable format** for production
+- **Appropriate log levels** (DEBUG, INFO, WARN, ERROR)
+
+### UI Logs
+- **Human-readable messages** in web/GUI applications
+- **User-friendly error messages** that don't expose internal details
+- **Progress indicators** for long-running operations
+- **Clear action items** when user intervention required
+
+## Log Export and Structured Logging
+
+### Platform Integration
+- **Prefer structured-log export** if platform supports it
+- **Use standard logging libraries** (Winston for Node.js, structlog for Python)
+- **Implement consistent log schemas** across services
+- **Include correlation IDs** for distributed tracing
+
+### Dry-Run Output Capture
+- **Capture dry-run output** in file logs for audit purposes
+- **Include dry-run results** in decision-making documentation
+- **Store dry-run outputs** with timestamps for reference
+- **Compare dry-run vs actual results** for validation
+
+## Error Handling and Observability
+
+### Network/API Call Resilience
+- **Retry up to 3 times** with exponential back-off
+- **Log each attempt** with attempt number and timing
+- **Log final status** (success/failure) with full context
+- **Implement circuit breakers** for critical external dependencies
+
+### Retry Logic Implementation
+```javascript
+// ✅ GOOD: Proper retry with exponential backoff
+async function retryOperation(operation, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      logger.info(`Attempt ${attempt}/${maxRetries}`, { operation: operation.name });
+      const result = await operation();
+      logger.info('Operation successful', { attempt, operation: operation.name });
+      return result;
+    } catch (error) {
+      const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
+      logger.warn(`Attempt ${attempt} failed, retrying in ${delay}ms`, {
+        error: error.message,
+        operation: operation.name
+      });
+
+      if (attempt === maxRetries) {
+        logger.error('All retry attempts failed', {
+          maxRetries,
+          operation: operation.name,
+          finalError: error.message
+        });
+        throw error;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+```
+
+## Response Size and Token Management
+
+### Token Budget Guidelines
+- **Internal dev chats**: May use maximum available context
+- **User-facing responses**: Remain concise (≤ 400 tokens) and well-structured
+- **Detailed information**: Provide log links or summaries instead of dumping huge text blocks
+- **Exception**: User explicitly asks for exhaustive detail
+
+### Log Summary Practices
+- **Provide concise summaries** of log analysis
+- **Include relevant excerpts** rather than full log dumps
+- **Link to full logs** when available
+- **Highlight critical issues** and action items
+
+## Multi-Stream Verification
+
+### Three-Stream Logging
+Before asking user help, verify all three streams:
+1. **File logs** - Check structured logs for errors and warnings
+2. **Console output** - Review stdout/stderr for immediate feedback
+3. **UI logs** - Verify user-facing messages are appropriate
+
+### Include Relevant Excerpts
+- **Provide log excerpts** with requests for help
+- **Include timestamps** and context information
+- **Sanitize sensitive information** before sharing
+- **Highlight specific error messages** or anomalies
+
+## Critical Fixes Execution Results
+
+### Documentation Requirements
+- **Log all critical fixes** with before/after states
+- **Document fix procedures** for future reference
+- **Track fix effectiveness** and any side effects
+- **Maintain fix history** for audit purposes
+
+### Result Validation
+- **Verify fixes resolve** the original issue
+- **Test for regression** in related functionality
+- **Monitor for new issues** introduced by fixes
+- **Document lessons learned** from critical fixes
+
+## Monitoring and Alerting
+
+### Health Checks
+- **Implement service health endpoints** for monitoring
+- **Regular health check intervals** based on criticality
+- **Automated alerting** for health check failures
+- **Escalation procedures** for persistent issues
+
+### Performance Monitoring
+- **Track key performance indicators** (response time, throughput)
+- **Monitor resource utilization** (CPU, memory, disk)
+- **Implement performance alerting** for degradation
+- **Regular performance reviews** and optimization
+
+### Security Monitoring
+- **Log security events** (authentication, authorization)
+- **Monitor for suspicious activity** patterns
+- **Implement security alerting** for potential threats
+- **Regular security log reviews** and analysis
+
+## Log Management Best Practices
+
+### Log Level Guidelines
+- **DEBUG**: Detailed information for troubleshooting
+- **INFO**: General operational messages
+- **WARN**: Warning conditions that should be addressed
+- **ERROR**: Error conditions that require immediate attention
+- **FATAL**: Critical errors causing system failure
+
+### Sensitive Information Handling
+- **Never log credentials** or authentication tokens
+- **Sanitize user input** before logging
+- **Mask sensitive data** in log outputs
+- **Implement log access controls** for sensitive environments
+
+### Performance Considerations
+- **Asynchronous logging** for high-throughput applications
+- **Log buffering** to reduce I/O overhead
+- **Efficient log formatting** to minimize CPU usage
+- **Regular log rotation** to manage disk space
+
+This rule consolidates all logging, monitoring, observability, and error handling practices.

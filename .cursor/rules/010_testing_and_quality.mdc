@@ -1,0 +1,202 @@
+---
+description: "USE WHEN working with JavaScript/TypeScript testing, linting, or code quality to ensure proper standards and practices"
+globs: ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.mjs"]
+alwaysApply: false
+---
+
+# TESTING AND QUALITY
+
+## Testing Configuration Discipline
+
+### Rule Priority: P0 (Always Applied)
+
+### Core Principles
+
+#### 1. Tool Alignment Over Configuration Complexity
+**ALWAYS**: Choose testing tools that natively support your technology stack
+**NEVER**: Try to force incompatible tools to work through complex configuration
+
+```typescript
+// ✅ GOOD: Tool aligns with stack and constraints
+// Webpack + TypeScript + ESM + No tinypool issues → Use Jest (optimized)
+module.exports = {
+  preset: 'ts-jest/presets/default-esm',
+  testEnvironment: 'jsdom',
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: { 'ts-jest': { useESM: true } },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' }
+  // Total: 8 lines (under 30-line limit)
+}
+```
+
+#### 2. Configuration Constraint: 30-Line Maximum
+**CRITICAL**: Testing configurations must stay under 30 lines to prevent complexity debt
+**VIOLATION**: If your testing config exceeds 30 lines, you're using the wrong tool
+
+#### 3. Compatibility Matrix Enforcement
+**Test your stack combination FIRST** before committing to a testing framework:
+- **Webpack + TypeScript + ESM** → Jest with ts-jest/presets/default-esm
+- **Vite + TypeScript + ESM** → Vitest (native ESM support)
+- **Node.js + CommonJS** → Jest default configuration
+- **React + TypeScript** → Jest with React Testing Library
+
+### Testing Framework Selection
+
+#### Recommended: Jest for TypeScript/Webpack Projects
+```javascript
+// jest.config.cjs - Simple, reliable configuration
+module.exports = {
+  preset: 'ts-jest/presets/default-esm',
+  testEnvironment: 'jsdom',
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: { 'ts-jest': { useESM: true } },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
+  moduleNameMapping: { '^@/(.*)$': '<rootDir>/src/$1' }
+};
+```
+
+#### Alternative: Vitest for Vite Projects
+```javascript
+// vite.config.ts - Only if using Vite build system
+export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts']
+  }
+});
+```
+
+### Test Execution Standards
+
+#### Official Test Execution
+- **ALWAYS use `workflows/run.sh --test`** instead of running tests manually
+- **Official tests MUST be indexed** in `tests/index_tests.yaml`
+- **Run via `tests/run_tests.sh`** with appropriate flags (`--all`, `--e2e`)
+- **100% pass rate required** - no skipped tests allowed
+
+#### Test Command Safety
+```bash
+# ✅ CORRECT: Use official test runner
+timeout 300 bash workflows/run.sh --test
+
+# ✅ CORRECT: Run specific test suites
+timeout 180 bash tests/run_tests.sh --all
+timeout 300 bash tests/run_tests.sh --e2e
+
+# ❌ WRONG: Direct test execution
+npm test
+jest
+vitest
+```
+
+## ESLint Error Prevention
+
+### Common ESLint Error Patterns
+
+#### 1. Unused Variables and Imports
+```javascript
+// ❌ BAD: Unused import
+import { unusedFunction } from './utils';
+
+// ✅ GOOD: Remove unused import
+// import { unusedFunction } from './utils';
+```
+
+#### 2. Missing Dependencies in useEffect
+```javascript
+// ❌ BAD: Missing dependency
+useEffect(() => {
+  fetchData();
+}, []); // Missing fetchData dependency
+
+// ✅ GOOD: Include all dependencies
+useEffect(() => {
+  fetchData();
+}, [fetchData]);
+```
+
+#### 3. Prefer const over let
+```javascript
+// ❌ BAD: Using let for non-reassigned variable
+let message = 'Hello World';
+
+// ✅ GOOD: Use const for constants
+const message = 'Hello World';
+```
+
+### ESLint Configuration Philosophy
+- **Prioritize functional and security issues** over cosmetic style preferences
+- **Disable rules that are purely stylistic** or subjective
+- **Keep rules that prevent bugs, security issues, or runtime errors**
+- **Focus on code that works correctly** rather than style preferences
+
+## TypeScript Error Prevention
+
+### Common TypeScript Error Patterns
+
+#### 1. Type Assertions vs Type Guards
+```typescript
+// ❌ BAD: Unsafe type assertion
+const user = data as User;
+
+// ✅ GOOD: Type guard with validation
+function isUser(obj: any): obj is User {
+  return obj && typeof obj.id === 'string' && typeof obj.name === 'string';
+}
+
+const user = isUser(data) ? data : null;
+```
+
+#### 2. Proper Interface Definitions
+```typescript
+// ❌ BAD: Loose interface
+interface User {
+  id: any;
+  data: object;
+}
+
+// ✅ GOOD: Specific interface
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+```
+
+#### 3. Generic Type Constraints
+```typescript
+// ❌ BAD: Unconstrained generic
+function process<T>(item: T): T {
+  return item.toString(); // Error: toString doesn't exist on T
+}
+
+// ✅ GOOD: Constrained generic
+function process<T extends { toString(): string }>(item: T): string {
+  return item.toString();
+}
+```
+
+## Code Quality Standards
+
+### Immediate Test and Lint Fixes
+- **Fix all ESLint errors** before committing
+- **Resolve all TypeScript type errors** immediately
+- **Ensure 100% test pass rate** before merge
+- **No skipped or pending tests** allowed in main branch
+
+### Quality Gates
+- **Pre-commit hooks MUST pass** - never use `--no-verify`
+- **All linting errors MUST be resolved** before commit
+- **Code coverage thresholds MUST be maintained**
+- **Type checking MUST pass** with strict mode
+
+### Testing Best Practices
+- **Write tests before or alongside code** (TDD/BDD approach)
+- **Test both happy path and error conditions**
+- **Use descriptive test names** that explain the scenario
+- **Keep tests isolated** and independent
+- **Mock external dependencies** appropriately
+
+This rule consolidates all testing frameworks, linting, code quality, and development standards.

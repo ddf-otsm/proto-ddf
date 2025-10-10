@@ -1,0 +1,186 @@
+---
+description: "USE WHEN AI needs to access files excluded by .cursorignore to guide proper access methods"
+globs: ["**/*"]
+alwaysApply: false
+---
+
+# Ignored File Access Protocol
+
+## When AI Needs to Access Ignored Files
+
+### **🔍 Detection Indicators**
+The AI should recognize these scenarios:
+- User mentions files that AI cannot find through search
+- Error messages about missing files that should exist
+- Requests to edit files in excluded directories (`model_cache/`, `logs/`, `generated_images/`, etc.)
+- Need to access configuration files in ignored locations
+
+### **🤖 AI Response Protocol**
+
+#### **Step 1: Acknowledge the Limitation**
+```
+"I notice that [file/directory] may be in .cursorignore and not visible to my search tools."
+```
+
+#### **Step 2: Request Explicit Path**
+```
+"Could you provide the exact file path so I can access it directly?"
+```
+
+#### **Step 3: Use Available Access Methods**
+
+**Method A: Terminal Commands (Always Works)**
+```bash
+# List directory contents
+ls -la [ignored_directory]/
+
+# Read file contents
+cat [ignored_file_path]
+head -20 [ignored_file_path]
+tail -20 [ignored_file_path]
+
+# Search within ignored areas
+find [ignored_directory] -name "*.ext" | head -10
+grep -r "search_term" [ignored_directory]/ | head -10
+```
+
+**Method B: Direct File Tools (May Work)**
+```
+# These may work with explicit paths:
+read_file "[explicit_path]"
+edit_file "[explicit_path]"
+search_replace "[explicit_path]"
+```
+
+#### **Step 4: Offer Solutions**
+```
+"I can help you temporarily modify .cursorignore if you need me to have broader access to this directory."
+```
+
+### **📋 Common Scenarios & Responses**
+
+#### **Scenario 1: Log File Analysis**
+```
+User: "Check the latest error in the logs"
+AI Response: "I need the specific log file path since logs/ is excluded from indexing.
+Could you specify which log file? For example: logs/error.log or logs/application.log"
+```
+
+#### **Scenario 2: Model Configuration**
+```
+User: "Update the model config"
+AI Response: "Model files are excluded from indexing for performance. Please provide the
+exact path to the config file, such as: model_cache/models--[model_name]/config.json"
+```
+
+#### **Scenario 3: Generated Content Review**
+```
+User: "Review the generated images"
+AI Response: "Generated content is excluded from indexing. I can access specific files
+if you provide paths like: generated_images/image_001.png"
+```
+
+#### **Scenario 4: Build Artifacts**
+```
+User: "Check the build output"
+AI Response: "Build directories are excluded. I can examine specific files if you provide
+paths like: build/output.log or dist/bundle.js"
+```
+
+### **⚡ Quick Access Commands**
+
+#### **Emergency File Access:**
+```bash
+# Quick directory overview
+timeout 10 ls -la [ignored_directory]/
+
+# File content preview
+timeout 10 head -20 [ignored_file_path]
+
+# Search for specific content
+timeout 10 grep -r "error\|warning" logs/ | head -10
+```
+
+#### **Safe File Operations:**
+```bash
+# Check file exists before operations
+[ -f "[file_path]" ] && echo "File exists" || echo "File not found"
+
+# Get file info
+timeout 10 file [ignored_file_path]
+timeout 10 wc -l [ignored_file_path]
+```
+
+### **🚨 Important Limitations**
+
+#### **What AI CANNOT Do with Ignored Files:**
+- ❌ Find files through codebase search
+- ❌ Include files in automatic context
+- ❌ Suggest edits without explicit request
+- ❌ See files in directory listings from search tools
+
+#### **What AI CAN Do with Ignored Files:**
+- ✅ Access files via terminal commands
+- ✅ Read/edit files with explicit paths
+- ✅ Search within files using command line
+- ✅ Perform operations when given specific file names
+
+### **🔧 Temporary Access Solutions**
+
+#### **For User: Override .cursorignore Temporarily**
+```bash
+# Backup current .cursorignore
+cp .cursorignore .cursorignore.backup
+
+# Remove specific exclusion (e.g., logs/)
+grep -v "logs/" .cursorignore > .cursorignore.tmp
+mv .cursorignore.tmp .cursorignore
+
+# Work with AI on the files
+
+# Restore original .cursorignore
+mv .cursorignore.backup .cursorignore
+```
+
+#### **For AI: Request Temporary Access**
+```
+"If you need me to have broader access to [directory], I can guide you through
+temporarily modifying .cursorignore. This will allow me to see and work with
+these files more easily."
+```
+
+### **📊 Performance Considerations**
+
+#### **Current Exclusions (.cursorignore):**
+- `model_cache/` - Large ML model files
+- `node_modules/` - NPM dependencies
+- `generated_images/` - Generated media
+- `logs/` - Log files
+- `venv/` - Python virtual environment
+- `.git/` - Git internals
+- `coverage/` - Test coverage data
+- `test-results/` - Test output
+
+#### **Why These Are Excluded:**
+- **Performance**: 96% file reduction (121,657 → 4,441 files)
+- **Memory**: 1.36 GB excluded from indexing
+- **Rate Limiting**: Prevents cursor-always-local rate limit errors
+- **Focus**: Keeps AI context on relevant development files
+
+---
+
+## **🎯 Quick Reference for AI**
+
+**When user mentions files you can't find:**
+1. Acknowledge the `.cursorignore` limitation
+2. Ask for explicit file path
+3. Use terminal commands to access
+4. Offer temporary exclusion override if needed
+
+**Always available commands:**
+```bash
+ls -la [path]/
+cat [file]
+grep -r "term" [directory]/
+find [directory] -name "pattern"
+```

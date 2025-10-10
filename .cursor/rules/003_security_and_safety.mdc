@@ -1,0 +1,147 @@
+---
+description: "USE WHEN working with file paths, credentials, or security-sensitive operations to ensure proper safety and security protocols"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: false
+---
+
+# SECURITY AND SAFETY
+
+## Restrictions on Editing Ignored Files
+
+### Critical Protection Rule
+AI agents are strictly prohibited from editing or modifying any files listed in `.cursorignore` or `.dadosferaignore`. These files are protected to prevent unintended changes by automated processes.
+
+**CRITICAL**: AI agents MUST perform proactive validation before ANY file edit operation.
+
+### Proactive Validation Requirements
+Before attempting to edit ANY file, AI agents must:
+1. **Check Ignore Patterns**: Verify if the target file matches patterns in `.cursorignore` or `.dadosferaignore`
+2. **Implicit Pattern Detection**: Check for implicitly ignored files (e.g., `.env` when only `!.env.example` is allowed)
+3. **Sensitive File Detection**: Identify files containing credentials, secrets, or configuration data
+4. **Pre-authorization Check**: If file is protected, request permission BEFORE attempting edit
+
+### Mandatory Pre-Edit Validation Steps
+```bash
+# Example validation sequence before editing any file:
+1. Check if file exists in ignore patterns
+2. Identify file type (config, credential, sensitive)
+3. If protected: REQUEST PERMISSION FIRST
+4. Only proceed with edit after explicit authorization
+```
+
+### File Pattern Recognition
+
+#### Explicitly Protected Patterns
+- Any file listed directly in `.cursorignore` or `.dadosferaignore`
+- Files matching ignore glob patterns (e.g., `secrets/*`, `*.env`)
+
+#### Implicitly Protected Patterns
+- `.env` files (when only `!.env.example` is explicitly allowed)
+- Credential files, certificate files, private keys
+- Configuration files in protected directories
+
+### Authorization Procedure
+If an AI agent identifies a protected file during pre-validation, it must:
+1. **STOP immediately** - Do not attempt the edit operation
+2. **Clearly state** the need to edit the specific file and explain the purpose
+3. **Request explicit permission** with specific details
+4. **Wait for affirmative user consent** before proceeding with any modifications
+5. **Document the authorization** step, specific changes made, and reason for the edit
+
+## Destructive File Operations
+
+### High-Risk Operations Requiring Authorization
+- **File deletion** - especially system files, configuration files, or data files
+- **Directory removal** - particularly directories containing multiple files
+- **File overwriting** - replacing existing files with new content
+- **Permission changes** - modifying file or directory permissions
+- **Ownership changes** - changing file ownership or group membership
+
+### Safe Operation Procedures
+```bash
+# ✅ GOOD: Move to trash before deletion
+timeout 10 mv sensitive_file.conf /trash_git/
+timeout 10 git add /trash_git/sensitive_file.conf
+
+# ✅ GOOD: Backup before overwriting
+timeout 10 cp important_config.yml important_config.yml.backup
+# Then proceed with modifications
+
+# ✅ GOOD: Use appropriate timeouts
+timeout 5 chmod 644 public_file.txt
+timeout 10 find . -name "*.tmp" -delete
+```
+
+## Absolute Path Handling
+
+### Security Principles
+- **Never expose sensitive paths** in logs or error messages
+- **Validate all path inputs** to prevent directory traversal attacks
+- **Use relative paths** when possible for portability
+- **Implement proper path sanitization** in user inputs
+
+### Safe Path Practices
+```bash
+# ✅ GOOD: Validate paths exist and are accessible
+if [ -f "$CONFIG_FILE" ]; then
+    timeout 10 cat "$CONFIG_FILE"
+fi
+
+# ✅ GOOD: Use absolute paths for critical system operations
+SECURE_CONFIG="/etc/app/secure.conf"
+if [ -f "$SECURE_CONFIG" ]; then
+    timeout 10 chmod 600 "$SECURE_CONFIG"
+fi
+```
+
+### Credential and Secret Management
+- **Never hardcode credentials** in source code
+- **Use environment variables** for sensitive configuration
+- **Implement proper secret rotation** procedures
+- **Encrypt sensitive data** at rest and in transit
+
+## Enhanced Read-Only Access
+
+### Permitted Operations
+- AI agents are permitted to read the contents of protected files using non-destructive commands:
+  - `cat`, `head`, `tail`, `grep`
+  - `ls`, `find`, `stat`
+  - `diff`, `wc`, `sort`
+
+### Restricted Operations
+- Any operation that would alter content, metadata, or permissions requires authorization:
+  - File editing or writing
+  - Permission changes
+  - Ownership modifications
+  - File movement or deletion
+
+## Enforcement Mechanism
+
+### Pre-validation Requirements
+- **Pre-validation is MANDATORY** for all file edit operations
+- **No exceptions** - even minor edits require validation
+- **Failed validation** must result in permission request, not edit attempt
+- **Multiple violations** indicate need for rule improvement
+
+### Security Logging
+- **Log all file access attempts** to protected files
+- **Record authorization requests** and responses
+- **Monitor for suspicious patterns** of file access
+- **Implement audit trails** for security-sensitive operations
+
+## Emergency Procedures
+
+### Security Incident Response
+1. **Immediately stop** all automated operations if security breach suspected
+2. **Document the incident** with timestamps and affected resources
+3. **Notify security team** or responsible personnel
+4. **Preserve evidence** for investigation
+5. **Implement containment measures** to prevent further damage
+
+### Recovery Procedures
+- **Use backups** to restore compromised files
+- **Verify integrity** of restored files
+- **Update security measures** to prevent recurrence
+- **Conduct post-incident review** to improve procedures
+
+This rule consolidates all security protocols, file protection measures, and safety procedures for sensitive operations.

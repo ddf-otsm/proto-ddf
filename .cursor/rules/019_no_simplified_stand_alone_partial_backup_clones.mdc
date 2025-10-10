@@ -1,0 +1,10 @@
+---
+description: "USE WHEN creating new files or refactoring code to prevent backup and partial file artifacts"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: false
+---
+
+# NO "Simplified / Stand-alone / Partial / Backup" Clones
+
+- Never commit files named `*-simplified.*`, `*-fixed.*`, `*-standalone.*`, `*-partial.*`, `*-fragment.*`, `*-backup.*`.
+- Experiment in `/tmp/` or a throw-away branch, port fixes to the real file, delete scratch copies.

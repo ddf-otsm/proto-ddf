@@ -1,0 +1,231 @@
+---
+description: "USE WHEN refactoring, modifying, or replacing existing code to ensure no functionality is lost"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: true
+---
+
+# PRESERVE FUNCTIONALITY
+
+## Core Principle: Zero Feature Loss
+
+### Fundamental Rule
+- **Never remove or weaken existing features, logs, classes, functions, shell commands, or behavior**
+- **Refactor only when it delivers 0 feature loss** and 100% parity or improvement
+- **Replacement code must replicate and enhance** the old one while keeping backward compatibility
+
+### Feature Preservation Requirements
+
+#### Existing Functionality Audit
+Before any modification:
+1. **Catalog all existing features** and their current behavior
+2. **Document all inputs and outputs** of functions/modules being changed
+3. **Identify all dependencies** that rely on current behavior
+4. **Map all side effects** and state changes
+5. **Record all error handling** and edge cases
+
+#### Backward Compatibility
+- **Maintain all existing APIs** and interfaces
+- **Preserve all function signatures** unless explicitly extending them
+- **Keep all existing configuration options** functional
+- **Ensure all existing integrations** continue to work
+- **Maintain all existing data formats** and structures
+
+## Refactoring Safety Protocols
+
+### Pre-Refactoring Validation
+```bash
+# ✅ MANDATORY: Comprehensive testing before refactoring
+timeout 300 bash tests/run_tests.sh --all
+timeout 180 npm run lint
+timeout 120 npm run type-check
+
+# Document current behavior
+timeout 60 bash scripts/document-current-behavior.sh
+```
+
+### Safe Refactoring Process
+1. **Create comprehensive tests** covering existing behavior
+2. **Document current functionality** in detail
+3. **Implement changes incrementally** with validation at each step
+4. **Verify all tests pass** after each increment
+5. **Test backward compatibility** thoroughly
+6. **Validate performance** hasn't degraded
+
+### Refactoring Validation Checklist
+- [ ] All existing tests pass
+- [ ] New tests cover refactored functionality
+- [ ] All APIs maintain backward compatibility
+- [ ] No breaking changes to existing interfaces
+- [ ] Performance is maintained or improved
+- [ ] All error handling preserved or enhanced
+- [ ] Documentation updated to reflect changes
+
+## Feature Enhancement Guidelines
+
+### Additive Changes Only
+- **Add new functionality** without removing existing features
+- **Extend existing APIs** rather than replacing them
+- **Enhance error handling** without changing existing error codes
+- **Improve performance** while maintaining functional behavior
+- **Add configuration options** with sensible defaults
+
+### Safe Enhancement Patterns
+```javascript
+// ✅ GOOD: Additive enhancement
+function processData(data, options = {}) {
+    // Preserve existing behavior
+    if (typeof data === 'string') {
+        return legacyStringProcessing(data);
+    }
+
+    // Add new functionality
+    if (options.newFeature) {
+        return enhancedProcessing(data, options);
+    }
+
+    // Default to existing behavior
+    return originalProcessing(data);
+}
+
+// ❌ BAD: Breaking change
+function processData(data) {
+    // This breaks existing functionality
+    return newProcessingOnly(data);
+}
+```
+
+## Logging and Observability Preservation
+
+### Maintain Existing Logs
+- **Preserve all existing log statements** and their levels
+- **Keep all existing log formats** for backward compatibility
+- **Maintain all existing metrics** and monitoring points
+- **Preserve all existing debugging information**
+
+### Log Enhancement Without Breakage
+```javascript
+// ✅ GOOD: Enhanced logging while preserving existing logs
+function processRequest(request) {
+    // Preserve existing log
+    logger.info('Processing request', { requestId: request.id });
+
+    // Add enhanced logging
+    logger.debug('Request details', {
+        requestId: request.id,
+        method: request.method,
+        timestamp: new Date().toISOString()
+    });
+
+    // Existing functionality preserved
+    return existingProcessing(request);
+}
+```
+
+## Configuration and Environment Preservation
+
+### Maintain Configuration Compatibility
+- **Keep all existing configuration keys** functional
+- **Preserve configuration file formats** and structures
+- **Maintain environment variable behavior**
+- **Keep all existing command-line arguments** working
+
+### Safe Configuration Changes
+```yaml
+# ✅ GOOD: Additive configuration
+# config/app.yml
+app:
+  # Existing configuration preserved
+  name: "MyApp"
+  port: 3000
+  debug: false
+
+  # New configuration added with defaults
+  features:
+    newFeature: false  # Default maintains existing behavior
+    enhancedLogging: false
+```
+
+## Database and Data Structure Preservation
+
+### Schema Evolution Safety
+- **Use additive database migrations** only
+- **Never remove existing columns** without careful deprecation
+- **Maintain existing data formats** and structures
+- **Preserve all existing queries** and their behavior
+
+### Safe Data Migration
+```sql
+-- ✅ GOOD: Additive migration
+ALTER TABLE users ADD COLUMN new_feature_flag BOOLEAN DEFAULT FALSE;
+
+-- ❌ BAD: Breaking migration
+-- DROP COLUMN existing_important_field;
+```
+
+## API and Interface Preservation
+
+### API Backward Compatibility
+- **Never remove existing endpoints** without proper deprecation
+- **Maintain all existing response formats**
+- **Preserve all existing request parameters**
+- **Keep all existing behavior** for existing API versions
+
+### Safe API Evolution
+```typescript
+// ✅ GOOD: Backward compatible API extension
+interface UserRequest {
+    // Existing fields preserved
+    id: string;
+    name: string;
+
+    // New optional fields added
+    newFeature?: boolean;
+    enhancedData?: EnhancedUserData;
+}
+
+// ❌ BAD: Breaking API change
+interface UserRequest {
+    // Removing existing fields breaks compatibility
+    // id: string;  // REMOVED - BREAKS EXISTING CODE
+    userId: string;  // RENAMED - BREAKS EXISTING CODE
+    name: string;
+}
+```
+
+## Testing and Validation Preservation
+
+### Maintain Existing Tests
+- **Keep all existing tests** passing
+- **Preserve all existing test scenarios**
+- **Maintain all existing validation rules**
+- **Keep all existing test data** and fixtures
+
+### Test Enhancement Strategy
+```javascript
+// ✅ GOOD: Additive testing
+describe('UserService', () => {
+    // Preserve all existing tests
+    describe('existing functionality', () => {
+        it('should handle legacy user creation', () => {
+            // Existing test preserved
+        });
+    });
+
+    // Add new tests for enhanced functionality
+    describe('enhanced functionality', () => {
+        it('should handle new user features', () => {
+            // New test for new features
+        });
+    });
+});
+```
+
+## Documentation Preservation
+
+### Maintain Existing Documentation
+- **Keep all existing documentation** valid and accurate
+- **Update documentation** to reflect preserved behavior
+- **Add documentation** for new features without removing existing docs
+- **Maintain all existing examples** and tutorials
+
+This rule ensures that all code changes maintain 100% functional parity while allowing for enhancements and improvements.

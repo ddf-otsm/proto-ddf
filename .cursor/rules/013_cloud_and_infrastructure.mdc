@@ -1,0 +1,228 @@
+---
+description: "USE WHEN executing cloud operations to ensure proper safety measures and dry-run validation"
+globs: ["**/*.sh", "**/*.py", "**/*.yml", "**/*.yaml", "**/*.tf", "**/*.json"]
+alwaysApply: false
+---
+
+# CLOUD AND INFRASTRUCTURE
+
+## Cloud Operations Safety Rule
+
+### Priority
+P1 (Critical): Must always be followed
+
+### Core Principle
+**ALWAYS use --dry-run or equivalent safety checks before executing destructive cloud operations**
+
+### Implementation Requirements
+
+#### 1. Mandatory Dry-Run Pattern
+Before any cloud operation, agents must:
+- Execute the operation with `--dry-run` flag or equivalent
+- Review the dry-run output for correctness
+- Verify the operation targets the correct resources
+- Confirm no unintended side effects will occur
+- Only proceed with actual execution after validation
+
+#### 2. Critical Operations Requiring Dry-Run
+- **Resource creation** (instances, volumes, networks)
+- **Resource modification** (scaling, configuration changes)
+- **Resource deletion** (instances, data, backups)
+- **Infrastructure deployment** (Terraform, CloudFormation)
+- **Security policy changes** (IAM, firewall rules)
+
+### AWS CLI Safety
+
+#### Pagination and Pager Control
+```bash
+# ✅ REQUIRED: Disable pager before any AWS CLI command
+export AWS_PAGER=""
+export AWS_CLI_PAGER=""
+
+# Method 1: Use --no-cli-pager flag
+timeout 30 aws ec2 describe-instances --no-cli-pager
+
+# Method 2: Pipe to cat
+timeout 30 aws s3 ls | cat
+
+# Use --max-items for large responses
+timeout 30 aws ec2 describe-instances --max-items 50 --no-cli-pager
+```
+
+#### AWS CLI Safety Pattern
+```bash
+# === AWS CLI SAFETY PATTERN ===
+# STEP 1: Always set AWS_PAGER first
+export AWS_PAGER=""
+
+# STEP 2: Test basic connectivity
+timeout 10 aws sts get-caller-identity --no-cli-pager
+
+# STEP 3: Proceed with AWS operations only if test succeeds
+if [ $? -eq 0 ]; then
+    timeout 30 aws ec2 describe-instances --no-cli-pager
+fi
+```
+
+#### Troubleshooting Hanging AWS Commands
+```bash
+# If AWS CLI hangs:
+# Kill hanging process (Ctrl+C), then:
+export AWS_PAGER=""
+
+# Retry command
+timeout 30 aws ec2 describe-instances --no-cli-pager
+```
+
+### Terraform Safety and Validation
+
+#### Mandatory Terraform Validation Pipeline
+Before any Terraform operation, agents must run comprehensive validation:
+
+```bash
+# ✅ REQUIRED: Run comprehensive validation before terraform operations
+timeout 300 ./scripts/infrastructure/terraform-validate-comprehensive.sh
+
+# ✅ REQUIRED: Fix formatting first
+timeout 30 terraform fmt -recursive terraform/
+
+# ✅ REQUIRED: Basic validation
+timeout 30 terraform validate
+
+# ✅ REQUIRED: Security scanning
+timeout 60 trivy config terraform/oci/gpu-production --format table
+
+# ✅ REQUIRED: Linting and best practices
+timeout 60 tflint --chdir=terraform/oci/gpu-production
+
+# ✅ REQUIRED: Policy compliance
+timeout 60 checkov --config-file .checkov.yml
+```
+
+#### Critical Terraform Tools (Must be Available)
+- **terraform** (v1.12.2+) - Core infrastructure management
+- **TFLint** (v0.58.1+) - Linting and best practices
+- **Trivy** (v0.65.0+) - Modern security scanner
+- **Checkov** (v3.2.450+) - Policy compliance (CIS, NIST, SOC 2)
+- **tfsec** (v1.28.14+) - Legacy security scanner
+- **Terrascan** (v1.19.9+) - Additional security validation
+
+#### Installation Command
+```bash
+# Install all terraform validation tools
+timeout 300 ./scripts/infrastructure/install-terraform-tools.sh
+```
+
+### Kubernetes (kubectl) Safety
+
+#### Resource Listing with Limits
+```bash
+# ✅ GOOD: Use --limit for large clusters
+timeout 30 kubectl get pods --limit=50
+timeout 30 kubectl get nodes --limit=20
+
+# ✅ GOOD: Namespace-specific queries
+timeout 30 kubectl get pods -n production --limit=30
+```
+
+#### Dry-Run for Kubernetes Operations
+```bash
+# ✅ REQUIRED: Dry-run before apply
+timeout 30 kubectl apply -f deployment.yaml --dry-run=client
+timeout 30 kubectl apply -f deployment.yaml --dry-run=server
+
+# Only proceed if dry-run succeeds
+timeout 60 kubectl apply -f deployment.yaml
+```
+
+### GitHub CLI (gh) Safety
+
+#### Pagination for List Commands
+```bash
+# ✅ GOOD: Limit results to prevent overwhelming output
+timeout 30 gh repo list --limit 20
+timeout 30 gh pr list --limit 10
+timeout 30 gh issue list --limit 15
+```
+
+### Docker Operations
+
+#### Safe Container Management
+```bash
+# ✅ GOOD: Use --format for structured output
+timeout 30 docker ps --format "table {{.Names}}\t{{.Status}}"
+timeout 30 docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+
+# ✅ GOOD: Limit output for large registries
+timeout 30 docker images | head -20
+```
+
+## Infrastructure as Code Safety
+
+### Terraform Operations
+```bash
+# ✅ MANDATORY: Always plan before apply
+timeout 120 terraform plan -out=tfplan
+
+# Review plan output before proceeding
+timeout 300 terraform apply tfplan
+
+# For destroy operations
+timeout 120 terraform plan -destroy -out=destroy-plan
+timeout 300 terraform apply destroy-plan
+```
+
+### CloudFormation Safety
+```bash
+# ✅ MANDATORY: Validate templates
+timeout 30 aws cloudformation validate-template --template-body file://template.yaml --no-cli-pager
+
+# ✅ MANDATORY: Create change set before stack updates
+timeout 60 aws cloudformation create-change-set \
+  --stack-name my-stack \
+  --template-body file://template.yaml \
+  --change-set-name my-change-set \
+  --no-cli-pager
+
+# Review change set before executing
+timeout 60 aws cloudformation describe-change-set \
+  --stack-name my-stack \
+  --change-set-name my-change-set \
+  --no-cli-pager
+```
+
+## Environment and Platform Configuration
+
+### Environment Variable Validation
+- **Validate required environment variables** before cloud operations
+- **Use secure methods** for credential management
+- **Never hardcode credentials** in scripts or configurations
+- **Implement credential rotation** procedures
+
+### Platform-Specific Notes
+- **AWS**: Use IAM roles and policies for access control
+- **Azure**: Implement managed identities where possible
+- **GCP**: Use service accounts with minimal required permissions
+- **Oracle Cloud**: Follow OCI security best practices
+
+### Multi-Cloud Considerations
+- **Standardize tooling** across cloud providers where possible
+- **Implement consistent security policies** across environments
+- **Use infrastructure as code** for reproducible deployments
+- **Monitor costs** across all cloud platforms
+
+## Monitoring and Alerting
+
+### Cloud Resource Monitoring
+- **Set up billing alerts** to prevent cost overruns
+- **Monitor resource utilization** and optimize accordingly
+- **Implement health checks** for critical services
+- **Configure automated scaling** based on demand
+
+### Security Monitoring
+- **Enable cloud trail logging** for audit purposes
+- **Monitor for unusual access patterns**
+- **Implement real-time security alerts**
+- **Regular security assessments** and penetration testing
+
+This rule consolidates all cloud operations, infrastructure management, and platform-specific safety practices.

@@ -1,0 +1,248 @@
+---
+title: "Recurrent Error Prevention"
+description: "USE WHEN making changes to prevent documented recurrent errors and enforce professional team decisions"
+priority: "P1"
+applies_to: ["code_changes", "configuration_changes", "type_modifications"]
+---
+
+# Recurrent Error Prevention
+
+## Priority
+P1 (Critical): Must always be followed
+
+## Core Principle
+**Check documented code decisions before making changes to prevent repeating resolved issues**
+
+## When to Apply This Rule
+**USE WHEN:**
+- Modifying any configuration files (Jest, Babel, TypeScript, etc.)
+- Changing function signatures or return types
+- Making "obvious improvements" that might have already been researched
+- Working with port configurations, service URLs, or type definitions
+- Touching files that seem to have "incorrect" implementations
+
+## The Problem
+AI agents often make the same "logical" changes repeatedly, unaware that:
+1. The current implementation is intentional and researched
+2. Previous attempts to "fix" this have been tried and reverted
+3. Professional teams have made decisions based on testing and integration requirements
+4. "Obvious improvements" often break subtle integrations
+
+## Code Decisions System
+
+### Before Making Changes
+**MANDATORY STEPS:**
+1. **Check for existing decision**: Look in `docs/inventory/code-decisions/`
+2. **Read the decision document** if it exists for your change area
+3. **Understand the reasoning** behind current implementation
+4. **Consider integration impacts** documented in the decision
+
+### Decision Documents Location
+```
+docs/inventory/code-decisions/
+├── port-configuration-types.md    # CD-001: Port string vs number
+├── jest-es-modules.md             # Future: Jest ES module configuration
+└── [other decisions as they're documented]
+```
+
+### Example Decision: CD-001 Port Configuration Types
+```typescript
+// ✅ CORRECT (Professional Team Decision)
+export function getServicePort(service: string): string {
+  return urlObj.port || '80';  // Returns string
+}
+
+// ❌ INCORRECT (Violates CD-001)
+export function getServicePort(service: string): number {
+  return parseInt(urlObj.port || '80', 10);  // Breaks integrations
+}
+```
+
+## Common Recurrent Errors
+
+### 1. Jest ES Modules Configuration
+**Recurrent Error**: Adding `.js` to `extensionsToTreatAsEsm`
+```javascript
+// ❌ WRONG (Causes validation errors)
+extensionsToTreatAsEsm: ['.ts', '.tsx', '.js']
+
+// ✅ CORRECT (JS files auto-detected when package.json has "type": "module")
+extensionsToTreatAsEsm: ['.ts', '.tsx']
+```
+
+**Why This Happens**: Seems logical to include .js files explicitly
+**Why It's Wrong**: Jest auto-detects .js as ES modules when `"type": "module"` in package.json
+
+### 2. Babel CommonJS vs ES Modules
+**Recurrent Error**: Setting `modules: "commonjs"` in test environment
+```javascript
+// ❌ WRONG (Breaks ES modules)
+env: {
+  test: {
+    presets: [['@babel/preset-env', { modules: "commonjs" }]]
+  }
+}
+
+// ✅ CORRECT (Maintains ES modules)
+env: {
+  test: {
+    presets: [['@babel/preset-env', { modules: false }]]
+  }
+}
+```
+
+### 3. Port Configuration Return Types
+**Recurrent Error**: Converting string ports to numbers
+**Why It Happens**: Numbers seem more "correct" for ports
+**Why It's Wrong**: Breaks template strings, environment variables, Docker configs
+
+## Automated Prevention
+
+### Pre-commit Hooks
+The system automatically prevents these errors:
+```bash
+scripts/hooks/pre-commit-code-decisions.sh
+```
+
+### Tests
+Enforcement tests catch violations:
+```bash
+tests/code-decisions/port-config-enforcement.test.ts
+```
+
+### Pre-push Validation
+Final check before pushing:
+```bash
+scripts/hooks/pre-push-code-decisions.sh
+```
+
+## Decision Workflow
+
+### For New Decisions
+1. **Research the problem** thoroughly
+2. **Test multiple approaches**
+3. **Document integration impacts**
+4. **Create decision document** in `docs/inventory/code-decisions/`
+5. **Add enforcement tests**
+6. **Update pre-commit hooks**
+
+### For Existing Decisions
+1. **Read the decision document** first
+2. **Understand the research** that led to the decision
+3. **Consider if new evidence** contradicts the decision
+4. **Update the document** if change is warranted
+5. **Never bypass without documentation**
+
+## Implementation Checklist
+
+### Before Making "Obvious" Changes
+- [ ] Check if this area has a documented decision
+- [ ] Read the decision document if it exists
+- [ ] Understand why current implementation exists
+- [ ] Consider if change provides new evidence
+- [ ] Update documentation if proceeding
+
+### For Configuration Changes
+- [ ] Check for recurrent error patterns
+- [ ] Test the change thoroughly
+- [ ] Verify integration compatibility
+- [ ] Run enforcement tests
+- [ ] Document reasoning for change
+
+### For Type/Signature Changes
+- [ ] Check existing usages and integrations
+- [ ] Verify test compatibility
+- [ ] Consider JSON serialization impacts
+- [ ] Test template string usage
+- [ ] Check Docker/environment compatibility
+
+## Error Messages
+
+### When Pre-commit Blocks You
+```
+❌ VIOLATION: Decision CD-001 in src/config/portConfig.ts
+   getServicePort MUST return string, not number. This is a professional team decision.
+   📖 See: docs/inventory/code-decisions/
+```
+
+**What to do:**
+1. Read the referenced decision document
+2. Understand why the current implementation exists
+3. Either fix your change or update the decision document with new evidence
+
+### When Tests Fail
+```
+FAIL tests/code-decisions/port-config-enforcement.test.ts
+  ✕ getServicePort MUST return string type (CD-001)
+```
+
+**What to do:**
+1. Check if your change violates a documented decision
+2. Read the enforcement test to understand the requirement
+3. Fix the violation or update the decision with justification
+
+## Benefits
+
+### For Teams
+- **Prevents repeated discussions** about the same issues
+- **Preserves institutional knowledge** about design decisions
+- **Reduces debugging time** from known problematic patterns
+- **Maintains system stability** by preventing regression
+
+### For AI Agents
+- **Clear guidance** on professional team decisions
+- **Prevents embarrassing reversions** of "improvement" attempts
+- **Provides context** for seemingly counterintuitive code
+- **Enables learning** from previous research and testing
+
+## Integration with Development Workflow
+
+### IDE Integration
+The enforcement tests run automatically with:
+```bash
+npm test tests/code-decisions/
+```
+
+### CI/CD Integration
+Pre-push hooks prevent bad commits from reaching production:
+```bash
+git push  # Automatically runs validation
+```
+
+### Documentation Integration
+Decision documents are part of the codebase and version controlled.
+
+## Exceptions and Updates
+
+### When Decisions Can Change
+- **New research** contradicts existing decision
+- **Technology updates** make previous constraints obsolete
+- **Integration requirements** change substantially
+- **Performance evidence** suggests different approach
+
+### Update Process
+1. **Document new evidence** in the decision file
+2. **Update enforcement tests** to reflect new decision
+3. **Test thoroughly** across all integration points
+4. **Communicate change** to all team members
+5. **Update cursor rules** if patterns change
+
+## Enforcement
+
+### Automatic
+- Pre-commit hooks catch violations
+- Tests fail on enforcement violations
+- Pre-push hooks block problematic commits
+
+### Manual
+- Code review should reference decisions
+- Documentation updates require decision updates
+- New patterns should be documented as decisions
+
+---
+
+## Summary
+
+**Never assume existing code is wrong.** Professional teams make decisions based on research, testing, and integration requirements. Check `docs/inventory/code-decisions/` before making changes that seem like "obvious improvements."
+
+**The goal is learning and prevention, not restriction.** Understanding why decisions were made helps create better code and prevents wasted time on known problematic patterns.

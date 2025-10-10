@@ -1,0 +1,188 @@
+---
+description: "USE WHEN editing configuration files to ensure proper config management and synchronization"
+globs: ["**/*.yml", "**/*.yaml", "**/*.json", "**/*.env", "**/*.conf", "**/*.config"]
+alwaysApply: false
+---
+
+# CONFIGURATION MANAGEMENT
+
+## Config-File Editing Discipline
+
+### Core Principles
+- **Centralize configuration** in the `config/` directory
+- **Use templates** for environment-specific configurations
+- **Maintain configuration consistency** across environments
+- **Version control all configuration** changes
+
+### Configuration File Organization
+- **`config/`** - Main configuration directory
+- **`config/platform-env/`** - Platform-specific environment configurations
+- **`config/monitoring/`** - Monitoring and observability configurations
+- **`config/secrets/`** - Secret templates and management (no actual secrets)
+
+## Environment & Platform Configs
+
+### Environment Configuration Strategy
+- **No `.env` files at project root** - use templates instead
+- **Template files**: `config/.env.dev.template`, `config/.env.local.template`
+- **Setup process**: Run `bash workflows/run.sh --setup` to generate `.env` from templates
+- **Platform-specific configs**: Store in `config/platform-env/docker/`, `config/platform-env/local/`
+
+### Configuration Synchronization
+```bash
+# ✅ CORRECT: Generate environment config
+timeout 30 bash workflows/run.sh --setup
+
+# ✅ CORRECT: Platform-specific configuration
+# config/platform-env/docker/dev.yml
+# config/platform-env/local/dev.yml
+```
+
+### Multi-Environment Management
+- **Development**: `config/dev.yml`, `config/.env.dev.template`
+- **Staging**: `config/staging.yml`, `config/.env.staging.template`
+- **Production**: `config/prod.yml`, `config/.env.prod.template`
+- **Local**: `config/local.yml`, `config/.env.local.template`
+
+## Streamlit & Config Sync
+
+### Streamlit Configuration Management
+- **Centralized streamlit config** in `config/streamlit/`
+- **Environment-specific settings** for different deployment targets
+- **Automatic configuration synchronization** between environments
+- **Template-based configuration** for consistent deployment
+
+### Configuration Templates
+```yaml
+# config/streamlit/app.yml
+server:
+  port: ${STREAMLIT_PORT:-8501}
+  address: ${STREAMLIT_HOST:-localhost}
+
+theme:
+  base: ${STREAMLIT_THEME:-light}
+  primaryColor: ${PRIMARY_COLOR:-#ff6347}
+```
+
+## Environment Variable Validation
+
+### Validation Requirements
+- **Validate required environment variables** before application startup
+- **Provide clear error messages** for missing or invalid variables
+- **Document all environment variables** in templates and documentation
+- **Implement type checking** for environment variables where applicable
+
+### Environment Variable Categories
+```bash
+# Critical Variables (must be set)
+export DATABASE_URL=""
+export API_KEY=""
+export SECRET_KEY=""
+
+# Optional Variables (with defaults)
+export LOG_LEVEL="${LOG_LEVEL:-INFO}"
+export PORT="${PORT:-3000}"
+export TIMEOUT="${TIMEOUT:-30}"
+```
+
+### Validation Implementation
+```bash
+# ✅ GOOD: Environment variable validation
+validate_env_vars() {
+    local required_vars=(
+        "DATABASE_URL"
+        "API_KEY"
+        "SECRET_KEY"
+    )
+
+    for var in "${required_vars[@]}"; do
+        if [ -z "${!var}" ]; then
+            echo "ERROR: Required environment variable $var is not set"
+            exit 1
+        fi
+    done
+}
+```
+
+## Configuration Security
+
+### Secret Management
+- **Never commit actual secrets** to version control
+- **Use secret templates** with placeholder values
+- **Implement secret rotation** procedures
+- **Use secure secret storage** (environment variables, secret managers)
+
+### Configuration Access Control
+- **Restrict access** to production configuration files
+- **Implement configuration change approval** processes
+- **Log all configuration changes** for audit purposes
+- **Use encrypted storage** for sensitive configuration data
+
+## Configuration Testing
+
+### Configuration Validation
+- **Test configuration files** for syntax errors
+- **Validate configuration schemas** where applicable
+- **Test environment variable substitution** in templates
+- **Verify configuration consistency** across environments
+
+### Automated Configuration Testing
+```bash
+# ✅ GOOD: Configuration validation
+timeout 10 yamllint config/*.yml
+timeout 10 jsonlint config/*.json
+
+# ✅ GOOD: Template testing
+timeout 30 bash scripts/test-config-templates.sh
+```
+
+## Configuration Documentation
+
+### Documentation Requirements
+- **Document all configuration options** with descriptions and examples
+- **Maintain configuration change logs** for tracking modifications
+- **Provide setup instructions** for each environment
+- **Include troubleshooting guides** for common configuration issues
+
+### Configuration Comments
+```yaml
+# config/app.yml - Main application configuration
+app:
+  # Application name (string, required)
+  name: "MyApp"
+
+  # Debug mode (boolean, default: false)
+  # Set to true for development environments only
+  debug: ${DEBUG:-false}
+
+  # Database connection settings
+  database:
+    # Database URL (string, required)
+    # Format: postgresql://user:pass@host:port/dbname
+    url: ${DATABASE_URL}
+
+    # Connection pool size (integer, default: 10)
+    pool_size: ${DB_POOL_SIZE:-10}
+```
+
+## Platform-Specific Configuration
+
+### Docker Configuration
+- **Docker-specific environment files** in `config/platform-env/docker/`
+- **Container-optimized settings** for resource limits and networking
+- **Volume mount configurations** for persistent data
+- **Service discovery configuration** for multi-container setups
+
+### Local Development Configuration
+- **Local-specific settings** in `config/platform-env/local/`
+- **Development database configurations** with local connection strings
+- **Debug settings enabled** for easier troubleshooting
+- **Hot-reload configurations** for rapid development
+
+### Cloud Platform Configuration
+- **Cloud-specific optimizations** for performance and cost
+- **Auto-scaling configurations** based on load
+- **Monitoring and logging** integration with cloud services
+- **Security group and network** configurations
+
+This rule consolidates all configuration management, environment handling, and platform-specific configuration practices.

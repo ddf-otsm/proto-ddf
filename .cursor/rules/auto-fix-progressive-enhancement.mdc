@@ -1,0 +1,376 @@
+---
+description: "USE WHEN implementing auto-fix scripts to ensure progressive execution and safe modification practices"
+globs: ["**/*.sh", "**/*.js", "**/*.ts", "**/*.py"]
+alwaysApply: false
+---
+
+# Auto-Fix Progressive Enhancement Rule
+
+## Mandatory Progressive Execution Pattern
+
+### Core Requirement
+
+**ALL auto-fix scripts MUST implement a 4-stage progressive execution model: Dry-Run → Sample → Extended → Full**
+
+### Required Command-Line Interface
+
+Every auto-fix script must support these execution modes:
+
+```bash
+# Stage 1: Dry-Run (MANDATORY FIRST STEP)
+./auto-fix-script.sh --dry-run
+# Shows what would be changed without making any modifications
+# Must output: files affected, changes planned, risk assessment
+
+# Stage 2: Sample Testing (MANDATORY SECOND STEP)
+./auto-fix-script.sh --sample
+# Tests fixes on 2-3 representative files only
+# Must validate: fix effectiveness, no regressions, syntax correctness
+
+# Stage 3: Extended Testing (MANDATORY THIRD STEP)
+./auto-fix-script.sh --extended
+# Tests on broader set (10-20% of total files)
+# Must verify: pattern consistency, edge case handling, performance impact
+
+# Stage 4: Full Execution (ONLY AFTER STAGES 1-3 SUCCESS)
+./auto-fix-script.sh --full
+# Applies fixes to all eligible files
+# Must include: progress tracking, rollback capability, comprehensive logging
+```
+
+## Implementation Requirements
+
+### Argument Parsing Template
+
+```bash
+# Required in all auto-fix scripts
+EXECUTION_MODE="dry-run"  # Default to safest mode
+SAMPLE_FILES=()
+EXTENDED_FILES=()
+FORCE_MODE=false
+
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --dry-run)
+                EXECUTION_MODE="dry-run"
+                shift
+                ;;
+            --sample)
+                EXECUTION_MODE="sample"
+                shift
+                ;;
+            --sample-files)
+                shift
+                while [[ $# -gt 0 && ! "$1" =~ ^-- ]]; do
+                    SAMPLE_FILES+=("$1")
+                    shift
+                done
+                ;;
+            --extended)
+                EXECUTION_MODE="extended"
+                shift
+                ;;
+            --full)
+                EXECUTION_MODE="full"
+                shift
+                ;;
+            --force)
+                FORCE_MODE=true
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+}
+```
+
+### Safety Validations
+
+```bash
+# Required safety checks before any execution
+validate_execution_safety() {
+    # Check git status
+    if [[ $(git status --porcelain) ]]; then
+        echo "⚠️  WARNING: Uncommitted changes detected"
+        if [[ "$FORCE_MODE" != "true" ]]; then
+            echo "❌ Please commit changes before running auto-fix"
+            exit 1
+        fi
+    fi
+
+    # Check if in correct directory
+    if [[ ! -f "package.json" ]] || [[ ! -d ".git" ]]; then
+        echo "❌ Must run from project root directory"
+        exit 1
+    fi
+
+    # Check TypeScript compilation before starting
+    if ! timeout 60 npx tsc --noEmit >/dev/null 2>&1; then
+        echo "✅ TypeScript errors detected - proceeding with fixes"
+    fi
+}
+```
+
+### Dry-Run Implementation
+
+```bash
+# Required dry-run mode implementation
+execute_dry_run() {
+    echo "🔍 DRY-RUN MODE: Analyzing potential changes..."
+
+    # Scan for target patterns
+    local target_files=$(find_target_files)
+    local pattern_matches=$(count_pattern_matches)
+
+    echo "📊 Analysis Results:"
+    echo "   📁 Files to be modified: $(echo "$target_files" | wc -l)"
+    echo "   🎯 Patterns to be fixed: $pattern_matches"
+    echo "   ⏱️  Estimated duration: $(estimate_duration)"
+    echo "   ⚠️  Risk level: $(assess_risk_level)"
+
+    # Show sample changes (first 3 files)
+    echo "📝 Sample changes preview:"
+    show_sample_changes 3
+
+    echo ""
+    echo "✅ Dry-run complete. Use --sample to test on sample files."
+}
+```
+
+### Sample Testing Implementation
+
+```bash
+# Required sample testing mode
+execute_sample() {
+    echo "🧪 SAMPLE MODE: Testing fixes on representative files..."
+
+    # Auto-select representative files if not specified
+    if [[ ${#SAMPLE_FILES[@]} -eq 0 ]]; then
+        SAMPLE_FILES=($(select_representative_files 3))
+    fi
+
+    echo "📋 Sample files selected:"
+    printf "   - %s\n" "${SAMPLE_FILES[@]}"
+
+    # Create backup
+    backup_files "${SAMPLE_FILES[@]}"
+
+    # Apply fixes
+    for file in "${SAMPLE_FILES[@]}"; do
+        echo "🔧 Fixing: $file"
+        apply_fixes_to_file "$file"
+    done
+
+    # Validate results
+    if validate_sample_results; then
+        echo "✅ Sample testing successful"
+        echo "➡️  Use --extended to test on broader set"
+    else
+        echo "❌ Sample testing failed - rolling back"
+        restore_backups "${SAMPLE_FILES[@]}"
+        exit 1
+    fi
+}
+```
+
+### Extended Testing Implementation
+
+```bash
+# Required extended testing mode
+execute_extended() {
+    echo "🚀 EXTENDED MODE: Testing fixes on broader file set..."
+
+    # Ensure sample was successful first
+    if [[ ! -f ".sample_success" ]]; then
+        echo "❌ Must run --sample successfully first"
+        exit 1
+    fi
+
+    local extended_files=$(select_extended_files)
+    echo "📋 Extended test set: $(echo "$extended_files" | wc -l) files"
+
+    # Apply to extended set with progress tracking
+    apply_fixes_with_progress "$extended_files"
+
+    # Comprehensive validation
+    if validate_extended_results; then
+        echo "✅ Extended testing successful"
+        echo "➡️  Use --full for complete application"
+        touch ".extended_success"
+    else
+        echo "❌ Extended testing failed"
+        exit 1
+    fi
+}
+```
+
+### Full Execution Implementation
+
+```bash
+# Required full execution mode with maximum safety
+execute_full() {
+    echo "🎯 FULL MODE: Applying fixes to all eligible files..."
+
+    # Ensure all previous stages completed
+    if [[ ! -f ".sample_success" ]] || [[ ! -f ".extended_success" ]]; then
+        echo "❌ Must complete --sample and --extended successfully first"
+        exit 1
+    fi
+
+    # Final confirmation
+    echo "⚠️  This will modify ALL eligible files in the project"
+    read -p "Continue? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted"
+        exit 0
+    fi
+
+    # Full execution with comprehensive logging
+    execute_full_fixes_with_monitoring
+
+    # Cleanup success markers
+    rm -f .sample_success .extended_success
+}
+```
+
+## Error Handling Requirements
+
+### Mandatory Error Recovery
+
+```bash
+# Required error handling in all modes
+handle_execution_error() {
+    local exit_code=$1
+    local stage="$2"
+
+    echo "❌ Error in $stage stage (exit code: $exit_code)"
+
+    case "$stage" in
+        "sample")
+            restore_backups "${SAMPLE_FILES[@]}"
+            ;;
+        "extended"|"full")
+            echo "🔄 Rolling back all changes..."
+            git checkout -- .
+            ;;
+    esac
+
+    echo "📋 Error logged to: logs/auto-fix-error-$(date +%Y%m%d_%H%M%S).log"
+    exit $exit_code
+}
+
+# Set error trap
+trap 'handle_execution_error $? "$EXECUTION_MODE"' ERR
+```
+
+## Validation and Testing Requirements
+
+### Required Validation Functions
+
+```bash
+# Must validate TypeScript compilation after changes
+validate_typescript() {
+    echo "🔧 Validating TypeScript compilation..."
+    if timeout 120 npx tsc --noEmit; then
+        echo "✅ TypeScript validation passed"
+        return 0
+    else
+        echo "❌ TypeScript validation failed"
+        return 1
+    fi
+}
+
+# Must validate tests still pass
+validate_tests() {
+    echo "🧪 Running test validation..."
+    if timeout 300 npm test > /dev/null 2>&1; then
+        echo "✅ Test validation passed"
+        return 0
+    else
+        echo "⚠️  Some tests may need updating"
+        return 0  # Don't fail on test issues during auto-fix
+    fi
+}
+```
+
+## Prohibited Patterns
+
+### ❌ NEVER Do This
+
+```bash
+# FORBIDDEN: Direct execution without staging
+sed -i 's/pattern/replacement/g' **/*.ts
+
+# FORBIDDEN: Batch changes without validation
+find . -name "*.ts" -exec sed -i 's/old/new/g' {} \;
+
+# FORBIDDEN: No rollback capability
+rm backup_files_*
+
+# FORBIDDEN: Silent failures
+command_that_might_fail || true
+```
+
+### ✅ ALWAYS Do This
+
+```bash
+# REQUIRED: Progressive staging
+case "$EXECUTION_MODE" in
+    "dry-run") execute_dry_run ;;
+    "sample") execute_sample ;;
+    "extended") execute_extended ;;
+    "full") execute_full ;;
+esac
+
+# REQUIRED: Validation at each stage
+apply_fixes && validate_changes && create_checkpoint
+
+# REQUIRED: Comprehensive logging
+log_action "Applied fix to $file" "$EXECUTION_MODE"
+```
+
+## Documentation Requirements
+
+### Required Help Output
+
+Every script must provide comprehensive help:
+
+```bash
+show_help() {
+    echo "Auto-Fix Script - Progressive Enhancement Framework"
+    echo ""
+    echo "REQUIRED USAGE PATTERN:"
+    echo "  1. $0 --dry-run      # Preview changes (ALWAYS START HERE)"
+    echo "  2. $0 --sample       # Test on 2-3 files"
+    echo "  3. $0 --extended     # Test on broader set"
+    echo "  4. $0 --full         # Apply to all files"
+    echo ""
+    echo "SAFETY FEATURES:"
+    echo "  - Automatic backups before changes"
+    echo "  - TypeScript compilation validation"
+    echo "  - Git status checking"
+    echo "  - Progressive risk validation"
+    echo ""
+    echo "For more information, see: docs/auto-fix-framework.md"
+}
+```
+
+---
+
+## Enforcement
+
+**ANY auto-fix script that does not implement this progressive pattern will be rejected in code review.**
+
+This rule ensures:
+
+- 🛡️ **Safety**: No accidental mass modifications
+- 🔍 **Visibility**: Always know what will change before it changes
+- 🧪 **Testing**: Validate on small sets before full application
+- 📊 **Monitoring**: Track progress and catch issues early
+- 🔄 **Rollback**: Always have a way back if something goes wrong

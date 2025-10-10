@@ -1,0 +1,123 @@
+---
+description: "USE WHEN creating new files, organizing project structure, or moving files to ensure proper folder discipline and project organization"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: false
+---
+
+# PROJECT STRUCTURE AND FILES
+
+## Folder Structure Discipline
+
+### Core Directory Organization
+- **`config/`** - All configuration files
+- **`scripts/`** - All automation scripts
+- **`docs/`** - All documentation
+- **`tests/`** - All test files
+- **`src/`** - Source code
+- **`public/`** - Static assets
+- **`workflows/`** - Workflow and pipeline scripts
+- **`terraform/`** - Infrastructure as code
+- **`docker/`** - Container configurations
+
+### Configuration Management
+- **Environment configs**: Use `config/.env.dev.template` (or `.env.local.template`)
+- **Platform configs**: Store in `config/platform-env/`
+- **Service configs**: Centralize in `config/` with appropriate subdirectories
+- **No `.env` files at project root** - run `run.sh --setup` to generate from templates
+
+## File Lifecycle Discipline
+
+### File Creation Guidelines
+- **Prefer editing existing files** over creating new ones
+- **Use existing patterns** and directory structures
+- **Check for similar functionality** before creating new files
+- **Follow naming conventions** established in the project
+
+### File Movement and Deletion
+- **Move files to `/trash_git`** before permanent deletion for user review
+- **Ensure `/trash_git` is tracked by git** for transparency
+- **Update all references** when moving or renaming files
+- **Search for imports, includes, and references** across the codebase
+- **Test thoroughly** after file operations to ensure no broken dependencies
+
+### Reference Management
+When moving, renaming, or deleting files:
+1. **Search for all references** using grep/ripgrep
+2. **Update import statements** in JavaScript/TypeScript files
+3. **Update include statements** in configuration files
+4. **Update path references** in shell scripts
+5. **Update documentation links** and references
+6. **Test the application** to ensure nothing is broken
+
+## Minimize New Files
+
+### Core Principle
+**Prefer extending existing functionality over creating new files**
+
+### Guidelines
+- **Extend existing scripts** with flags rather than creating new scripts
+- **Add functions to existing modules** rather than new files
+- **Use configuration options** to modify behavior instead of duplicating files
+- **Consolidate similar functionality** into single, well-organized files
+
+### When New Files Are Acceptable
+- **Genuinely new functionality** that doesn't fit existing patterns
+- **Large features** that would make existing files unwieldy
+- **Different technology stacks** requiring separate organization
+- **Security or access control** requirements necessitating separation
+
+## Avoid Duplication
+
+### Detection and Prevention
+- **Search existing codebase** before implementing new functionality
+- **Look for similar patterns** in naming, structure, and implementation
+- **Reuse existing utilities** and helper functions
+- **Extract common code** into shared modules when duplication is found
+
+### Consolidation Strategy
+- **Identify duplicated logic** across multiple files
+- **Create shared utilities** for common functionality
+- **Use inheritance or composition** to share behavior
+- **Maintain backward compatibility** when consolidating
+
+## File Organization Best Practices
+
+### Naming Conventions
+- **Use descriptive names** that clearly indicate file purpose
+- **Follow language conventions** (camelCase for JS/TS, snake_case for Python)
+- **Include file type indicators** when helpful (e.g., `user.service.ts`, `auth.middleware.js`)
+- **Avoid abbreviations** unless they're industry standard
+
+### Directory Structure
+- **Group related files** in appropriate subdirectories
+- **Separate concerns** (data access, business logic, presentation)
+- **Use consistent depth** - avoid deeply nested directory structures
+- **Document structure** in README files when complex
+
+### Temporary Files
+- **Use `./.tmp/`** for temporary scripts and files
+- **Name with timestamps** for uniqueness (e.g., `temp_script_YYYYMMDD_HHMMSS.sh`)
+- **Clean up regularly** - remove old temporary files
+- **Don't commit temporary files** to version control
+
+## Plan Management
+
+### Active Plans
+- **Store in `docs/plans/active/`** for current work
+- **Use repository-specific naming** (e.g., `{repo_name}_meta_plan.md`)
+- **Keep plans updated** with current status and next steps
+- **Move to `docs/plans/finished/`** when complete
+
+### Plan Organization
+- **One plan per logical feature** or major change
+- **Include acceptance criteria** and success metrics
+- **Track dependencies** between plans
+- **Review and update regularly** during development
+
+### Prioritized Plans
+- **Store in `docs/plans/prioritized/`** for future work
+- **Include priority levels** and effort estimates
+- **Review periodically** to move to active status
+- **Archive obsolete plans** to finished directory
+
+This rule consolidates all project structure, file management, and organization practices.

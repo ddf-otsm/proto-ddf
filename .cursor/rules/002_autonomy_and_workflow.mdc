@@ -1,0 +1,117 @@
+---
+description: "USE WHEN executing tasks autonomously or when user input is needed to ensure proper autonomy boundaries and user handoff protocols"
+globs: ["**/*.js", "**/*.ts", "**/*.py", "**/*.sh", "**/*.yml", "**/*.yaml", "**/*.json"]
+alwaysApply: true
+---
+
+# AUTONOMY AND WORKFLOW
+
+## Core Autonomy Principles
+
+### Autonomous Execution Guidelines
+- Execute tasks **autonomously** when the goal is unambiguous and all rules are satisfied
+- If a requirement is **ambiguous, destructive, or conflicts with an existing rule**, pause and ask the user for clarification **before** acting
+- `submodules --recursive` (e.g., `git submodule update --init --recursive`) is prohibited without explicit user authorization
+- Usually, you only want to checkout/update the first-level submodule (e.g., `git submodule update --init`)
+
+### Planning and Decision Making
+- **Propose a plan** (high-level steps, flags, dry-run output) when first tackling a new feature or major refactor
+- Wait for user approval unless the user has already granted blanket autonomy
+- **Present options** – include a **ranked list** of viable solutions (≥ 2 when possible) and clearly mark your **top-choice**
+- **Auto-select #1** – proceed with the top-ranked option by default
+- If the user replies "continue" or similar, execute the next option without re-planning
+
+### Self-Check (5-step) Before Executing
+1. Restate the goal
+2. List key constraints from this PRE-PROMPT
+3. Verify chosen plan satisfies constraints
+4. Confirm no duplication/symlink/forbidden patterns introduced
+5. Ensure tests & dry-runs will run
+
+### Background Process Management
+- **Background long-running commands** – for server/watch commands (`npm run dev`, `node dist/index.js`, etc.) run them in the background (`&`) to avoid stalling the session
+
+### When Autonomy is Exercised
+Always:
+1. Log decisions in the file log (`INFO` level)
+2. Ensure unit/integration tests, lints, and dry-runs pass
+3. Provide a concise summary in the PR or commit message so humans understand the automated changes
+
+### User Assistance Protocol
+- If user assistance is required, include relevant file/console/UI log excerpts so the user can help without re-executing the workflow
+
+## Autonomous Completion Before User Queries
+
+### Priority
+P1 (Critical): Must always be followed
+
+### Core Principle
+**Complete all possible autonomous actions before asking users for input or confirmation**
+
+### Implementation Requirements
+
+#### 1. Autonomous Action Assessment
+Before asking any user question, agents must:
+- Identify all actions that can be completed autonomously
+- Execute all safe, reversible operations immediately
+- Verify completion of autonomous tasks
+- Document what was accomplished
+
+#### 2. Prohibited User Queries
+**DO NOT ask users about actions you can complete autonomously:**
+- ❌ "Should I check the current status?" → ✅ Check it autonomously
+- ❌ "Do you want me to verify the configuration?" → ✅ Verify it autonomously
+- ❌ "Should I remove the temporary files?" → ✅ Remove them autonomously
+- ❌ "Have you completed step X?" → ✅ Check and complete step X autonomously
+
+#### 3. Valid User Query Scenarios
+**ONLY ask users when:**
+- Destructive operations requiring explicit authorization
+- Multiple viable options requiring user preference selection
+- External dependencies outside agent control (user environment setup)
+- Ambiguous requirements needing clarification
+- Security-sensitive operations requiring human oversight
+
+#### 4. Autonomous Completion Pattern
+```
+1. ASSESS: What can I complete autonomously?
+2. EXECUTE: Complete all autonomous actions
+3. VERIFY: Confirm completion and results
+4. DOCUMENT: Log what was accomplished
+5. EVALUATE: Is user input still needed?
+6. REQUEST: Ask user only if truly necessary
+```
+
+## Destructive Command Authorization
+
+### Critically Restricted Commands
+Certain commands require explicit authorization from a human user before execution by an AI agent.
+
+#### `git reset --hard <target>`
+- **Risk**: Discards all uncommitted changes in the working directory and staging area, and resets the current branch to `<target>`
+- **Prohibition**: AI agents are strictly prohibited from executing `git reset --hard` without obtaining explicit, affirmative authorization
+- **Authorization Procedure**:
+  1. The AI must clearly state the intent to use `git reset --hard` and specify the exact target
+  2. The AI must explain the reason for needing this command and the expected outcome
+  3. The AI must explicitly ask for permission
+  4. The user must provide a clear affirmative response
+- **Alternatives**: Consider safer alternatives like `git stash`, creating a new branch for experimentation, or `git checkout <paths>`
+
+#### `git commit --no-verify`
+- **Risk**: Bypasses pre-commit hooks and verification checks
+- **Prohibition**: AI agents are strictly prohibited from using `git commit --no-verify` without explicit authorization
+- **Authorization Procedure**:
+  1. The AI must clearly state the intent to use `git commit --no-verify`
+  2. The AI must explain the reason for needing to bypass verification
+  3. The AI must explicitly ask for permission
+  4. The user must provide a clear affirmative response
+- **Alternatives**: Ensure that the code passes all pre-commit hooks or consider alternative workflows
+
+### Documentation Requirements
+If authorization is granted and destructive commands are executed, the AI must log:
+- The authorization step
+- The command executed
+- The reason for execution
+- The outcome and any recovery steps taken
+
+This rule consolidates all autonomy, workflow, and user handoff protocols.

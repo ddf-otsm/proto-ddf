@@ -1,0 +1,150 @@
+---
+description: "USE WHEN creating new files to prevent backup and enhanced file artifacts"
+globs:
+  [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.py",
+    "**/*.sh",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.json",
+  ]
+alwaysApply: true
+---
+
+# Enhanced File Creation Prevention Rule
+
+## Core Principle
+
+**NEVER create files with suffixes like `-enhanced`, `-fixed`, `-simplified`, `-v2`, `-new`, `-improved`, `-better`, `-optimized`, or similar variants. ALWAYS enhance the original file directly.**
+
+## Prohibited File Naming Patterns
+
+### ❌ FORBIDDEN Patterns
+
+- `filename-enhanced.ext`
+- `filename-fixed.ext`
+- `filename-simplified.ext`
+- `filename-v2.ext`
+- `filename-new.ext`
+- `filename-improved.ext`
+- `filename-better.ext`
+- `filename-optimized.ext`
+- `filename-refactored.ext`
+- `filename-updated.ext`
+- `filename-consolidated.ext`
+- `filename-master.ext` (when original exists)
+- `enhanced-filename.ext`
+- `fixed-filename.ext`
+- `new-filename.ext`
+
+### ✅ REQUIRED Approach
+
+- **Modify the original file directly**: `filename.ext`
+- **Use version control for safety**: Commit before major changes
+- **Create backups in `/trash_git`** if necessary for rollback
+- **Use feature branches** for experimental changes
+
+## Auto-Fix Framework Enhancement Protocol
+
+### Progressive Enhancement Stages
+
+Instead of creating new files, enhance existing auto-fix scripts with:
+
+1. **Dry-Run Mode**: `--dry-run` to show what would change
+2. **Sample Testing**: `--sample` to test on 2-3 representative files
+3. **Extended Testing**: `--extended` to test on broader file set
+4. **Full Execution**: `--full` to apply to all files
+
+### Implementation Pattern
+
+```bash
+# ✅ CORRECT: Enhance existing file with stages
+./auto-fix-script.sh --dry-run      # Stage 1: Preview
+./auto-fix-script.sh --sample       # Stage 2: Test sample
+./auto-fix-script.sh --extended     # Stage 3: Test extended
+./auto-fix-script.sh --full         # Stage 4: Full application
+
+# ❌ WRONG: Create new enhanced file
+# cp auto-fix-script.sh auto-fix-script-enhanced.sh
+```
+
+## File Enhancement Guidelines
+
+### When You Need to Improve a File
+
+1. **Read the existing file completely**
+2. **Understand its current functionality**
+3. **Plan your enhancements**
+4. **Modify the original file directly**
+5. **Test the enhanced functionality**
+6. **Commit the improvements**
+
+### Safety Mechanisms
+
+- **Git commits** before major changes
+- **Feature branches** for experimental work
+- **Backup to `/trash_git`** for critical files
+- **Incremental changes** with testing at each step
+
+## Enforcement Actions
+
+### If You Catch Yourself Creating Enhanced Files
+
+1. **STOP immediately**
+2. **Delete the enhanced file**
+3. **Modify the original instead**
+4. **Document why the original approach is better**
+
+### Code Review Checklist
+
+- [ ] No files with enhancement suffixes created
+- [ ] Original files enhanced directly
+- [ ] Proper version control used for safety
+- [ ] Progressive enhancement stages implemented
+- [ ] Functionality preserved or improved
+
+## Benefits of Direct Enhancement
+
+### Maintainability
+
+- **Single source of truth** - no confusion about which version to use
+- **Clear history** - git shows evolution of the file
+- **No duplicate maintenance** - only one file to update
+
+### Quality
+
+- **Forced understanding** - must understand original to enhance it
+- **Better integration** - enhancements work with existing patterns
+- **Preserved functionality** - less likely to break existing features
+
+### Team Collaboration
+
+- **Clear ownership** - everyone knows which file is current
+- **Easier reviews** - changes shown as diffs, not new files
+- **Knowledge sharing** - improvements benefit everyone immediately
+
+## Exception Cases (Rare)
+
+### Only Create New Files When
+
+- **Completely different approach** needed (not enhancement)
+- **Different target platform** (e.g., `script.sh` vs `script.ps1`)
+- **Different configuration** (e.g., `dev.config.js` vs `prod.config.js`)
+- **Backup for major refactoring** (temporary, should be deleted after success)
+
+### Even Then, Consider
+
+- **Configuration parameters** instead of separate files
+- **Command-line flags** for different behaviors
+- **Environment variables** for platform differences
+- **Conditional logic** within the original file
+
+---
+
+## Summary
+
+**The golden rule: If you can enhance it, don't duplicate it. Enhance the original directly with proper safety measures.**
+
+This prevents code rot, maintains single source of truth, and forces proper understanding of existing code before modification.
