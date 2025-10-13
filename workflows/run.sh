@@ -35,6 +35,9 @@ if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1
     exit 1
 fi
 
+# Change to parent directory to access project files
+cd ..
+
 # Initialize submodules if needed
 if [ ! -f "reflex/pyproject.toml" ]; then
     echo "🔗 Initializing reflex submodule..."
@@ -62,6 +65,9 @@ if [ ! -f "venv/pyvenv.cfg" ] || ! pip show reflex > /dev/null 2>&1; then
     pip install -q -r requirements.txt 2>/dev/null || true
 fi
 
+# Change back to workflows directory for any workflow-specific operations
+cd workflows
+
 # Get the machine's IP address
 if command -v ipconfig &> /dev/null; then
     # macOS
@@ -77,6 +83,9 @@ fi
 # Ports are randomly selected (3000-5000) and persisted in config/.port_config.json
 FRONTEND_PORT=$(python3 -c "from config.constants import FRONTEND_PORT; print(FRONTEND_PORT)" 2>/dev/null || echo "3797")
 BACKEND_PORT=$(python3 -c "from config.constants import BACKEND_PORT; print(BACKEND_PORT)" 2>/dev/null || echo "3539")
+
+# Change to parent directory for reflex run command
+cd ..
 
 # Display application startup information
 echo "🌟 Starting Proto-DDF Generator Interface..."
@@ -94,6 +103,27 @@ echo "   🔧 To run generated apps: cd generated/<app_name> && ./run.sh"
 echo ""
 echo "   Press Ctrl+C to stop the server"
 echo ""
+
+# Check Node.js version for Reflex compatibility
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node --version | sed 's/^v//' | cut -d'.' -f1)
+    MIN_VERSION=20
+    if [ "$NODE_VERSION" -lt "$MIN_VERSION" ]; then
+        echo "⚠️  Node.js version v${NODE_VERSION}.* detected. Reflex recommends >= ${MIN_VERSION}.19.0 for best compatibility."
+        echo "   To upgrade (if using nvm): nvm install ${MIN_VERSION} && nvm use ${MIN_VERSION} && nvm alias default ${MIN_VERSION}"
+        echo "   The app will still run, but some features may be limited."
+    else
+        echo "✅ Node.js version v${NODE_VERSION}.* is compatible."
+    fi
+fi
+
+# Clean up any lingering processes on common ports to avoid binding conflicts
+if [ -f "./cleanup_ports.sh" ]; then
+    echo "🧹 Running port cleanup to free up any bound ports..."
+    ./cleanup_ports.sh
+else
+    echo "ℹ️  cleanup_ports.sh not found; skipping port cleanup."
+fi
 
 # Launch the Proto-DDF generator application
 reflex run
