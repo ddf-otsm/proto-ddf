@@ -28,9 +28,10 @@ proto-ddf/
 │   ├── constants.py         # Non-sensitive constants
 │   ├── .port_config.json    # Auto-generated port assignments (gitignored)
 │   └── README.md
+├── workflows/
+│   └── run.sh               # Main runner script
 ├── reflex/                  # Reflex framework (submodule)
 ├── rxconfig.py              # Main Reflex configuration
-├── run.sh                   # Main runner script
 └── venv/                    # Python virtual environment
 ```
 
@@ -39,7 +40,7 @@ proto-ddf/
 ### 1. Run the Generator Interface
 
 ```bash
-./run.sh
+./workflows/run.sh
 ```
 
 This will start the Proto-DDF generator interface where you can:
@@ -108,6 +109,75 @@ Then import in your code:
 from config.constants import MY_CUSTOM_SETTING
 ```
 
+## 🧪 Testing
+
+Proto-DDF includes a comprehensive test suite covering critical functionality.
+
+### Run Tests
+
+```bash
+# Run all tests
+./workflows/test.sh
+
+# Run unit tests only
+./workflows/test.sh unit
+
+# Run integration tests only
+./workflows/test.sh integration
+
+# Run with coverage report
+./workflows/test.sh coverage
+```
+
+### Test Coverage
+
+The test suite includes:
+
+#### Unit Tests (`tests/unit/`)
+- **Configuration Tests** (`test_config.py`)
+  - Port assignment and validation
+  - Port persistence and uniqueness
+  - Application constants
+  - Field mapping patterns
+  
+- **Generator Tests** (`test_generator.py`)
+  - Generator state management
+  - UI component imports
+  - Generated app structure validation
+
+#### Integration Tests (`tests/integration/`)
+- **Workflow Tests** (`test_workflow.py`)
+  - Virtual environment setup
+  - Python version validation
+  - Reflex installation
+  - Configuration loading
+  - Port availability checks
+  - Run script validation
+  - Application structure validation
+
+### Test Results
+
+```bash
+# Example output
+============================= test session starts ==============================
+collected 37 items
+
+tests/integration/test_workflow.py ................. [ 45%]
+tests/unit/test_config.py ..................... [ 75%]
+tests/unit/test_generator.py ............. [100%]
+
+============================== 37 passed in 0.55s ==============================
+```
+
+### Manual Testing Checklist
+
+- [ ] Generator interface loads on assigned port
+- [ ] Generated apps display in the interface
+- [ ] Port configuration persists across restarts
+- [ ] Network access works from other devices
+- [ ] Generated apps run independently
+- [ ] All automated tests pass (`./workflows/test.sh`)
+
 ## 📚 Documentation
 
 - [Architecture Guide](ARCHITECTURE.md) - System design and structure
@@ -152,7 +222,7 @@ Ports are randomly assigned (3000-5000) and saved in `config/.port_config.json`.
 ```bash
 # Reset to get new random ports
 rm config/.port_config.json
-./run.sh
+./workflows/run.sh
 ```
 
 This will generate new random ports for both the generator interface and any generated apps.

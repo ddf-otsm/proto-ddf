@@ -33,9 +33,9 @@ echo "🔧 Activating virtual environment..."
 source "$PROJECT_ROOT/venv/bin/activate"
 
 # Retrieve dynamically assigned ports from centralized configuration
-# Ports are randomly selected (3000-5000) and persisted in config/.port_config.json
-FRONTEND_PORT=$(python3 -c "import sys; sys.path.insert(0, '$PROJECT_ROOT'); from config.constants import FRONTEND_PORT; print(FRONTEND_PORT)" 2>/dev/null || echo "3797")
-BACKEND_PORT=$(python3 -c "import sys; sys.path.insert(0, '$PROJECT_ROOT'); from config.constants import BACKEND_PORT; print(BACKEND_PORT)" 2>/dev/null || echo "3539")
+# Generated apps use separate ports from the generator interface
+FRONTEND_PORT=$(python3 -c "import sys; sys.path.insert(0, '$PROJECT_ROOT'); from config.constants import GENERATED_FRONTEND_PORT; print(GENERATED_FRONTEND_PORT)" 2>/dev/null || echo "4000")
+BACKEND_PORT=$(python3 -c "import sys; sys.path.insert(0, '$PROJECT_ROOT'); from config.constants import GENERATED_BACKEND_PORT; print(GENERATED_BACKEND_PORT)" 2>/dev/null || echo "4001")
 
 # Determine network interface address for external access
 if command -v ipconfig &> /dev/null; then

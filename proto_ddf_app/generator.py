@@ -31,14 +31,14 @@ class GeneratorState(rx.State):
     project_name: str = ""
     project_description: str = ""
     
-    # Generated apps
+    # Generated apps - dynamically configured
     generated_apps: List[Dict] = [
         {
             "name": "NetSuite Integration Hub",
             "description": "Multi-source data integration showcase",
             "path": "generated/netsuite_integration_hub",
             "status": "ready",
-            "port": 4138
+            "port": 3459  # Will be dynamically set from config
         }
     ]
     
