@@ -9,11 +9,11 @@ Tests cover:
 - Generated app execution
 """
 
-import unittest
-import subprocess
-import sys
 import os
 import socket
+import subprocess
+import sys
+import unittest
 from pathlib import Path
 
 
@@ -28,7 +28,9 @@ class TestVirtualEnvironment(unittest.TestCase):
     def test_venv_exists(self):
         """Test that virtual environment exists."""
         self.assertTrue(self.venv_path.exists(), "Virtual environment not found")
-        self.assertTrue(self.venv_path.is_dir(), "Virtual environment is not a directory")
+        self.assertTrue(
+            self.venv_path.is_dir(), "Virtual environment is not a directory"
+        )
 
     def test_venv_python(self):
         """Test that virtual environment has Python."""
@@ -38,14 +40,12 @@ class TestVirtualEnvironment(unittest.TestCase):
     def test_python_version(self):
         """Test that Python version is 3.10+."""
         python_path = self.venv_path / "bin" / "python"
-        
+
         if not python_path.exists():
             self.skipTest("Python not found in virtual environment")
 
         result = subprocess.run(
-            [str(python_path), "--version"],
-            capture_output=True,
-            text=True
+            [str(python_path), "--version"], capture_output=True, text=True
         )
 
         version_str = result.stdout.strip()
@@ -54,32 +54,44 @@ class TestVirtualEnvironment(unittest.TestCase):
         major, minor = map(int, version.split(".")[:2])
 
         self.assertGreaterEqual(major, 3, "Python major version should be 3 or higher")
-        self.assertGreaterEqual(minor, 10, "Python minor version should be 10 or higher")
+        self.assertGreaterEqual(
+            minor, 10, "Python minor version should be 10 or higher"
+        )
 
     def test_reflex_installed(self):
         """Test that Reflex is installed in virtual environment."""
         python_path = self.venv_path / "bin" / "python"
-        
+
         if not python_path.exists():
             self.skipTest("Python not found in virtual environment")
 
         # Test that reflex can be imported (installed from submodule)
         # Need to add project root to PYTHONPATH for submodule imports
         import os
+
         env = os.environ.copy()
-        env['PYTHONPATH'] = str(self.project_root)
-        
+        env["PYTHONPATH"] = str(self.project_root)
+
         # Test that reflex imports successfully and has expected attributes
         result = subprocess.run(
-            [str(python_path), "-c", "import reflex; import reflex.constants; print('SUCCESS')"],
+            [
+                str(python_path),
+                "-c",
+                "import reflex; import reflex.constants; print('SUCCESS')",
+            ],
             capture_output=True,
             text=True,
-            env=env
+            env=env,
         )
 
-        self.assertEqual(result.returncode, 0, 
-                        f"Reflex not installed or import failed.\nStdout: {result.stdout}\nStderr: {result.stderr}")
-        self.assertIn("SUCCESS", result.stdout, "Reflex import did not complete successfully")
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"Reflex not installed or import failed.\nStdout: {result.stdout}\nStderr: {result.stderr}",
+        )
+        self.assertIn(
+            "SUCCESS", result.stdout, "Reflex import did not complete successfully"
+        )
 
 
 class TestConfigurationLoading(unittest.TestCase):
@@ -94,9 +106,10 @@ class TestConfigurationLoading(unittest.TestCase):
         """Test that config module can be imported."""
         try:
             import config
-            self.assertTrue(hasattr(config, 'FRONTEND_PORT'))
-            self.assertTrue(hasattr(config, 'BACKEND_PORT'))
-            self.assertTrue(hasattr(config, 'BACKEND_HOST'))
+
+            self.assertTrue(hasattr(config, "FRONTEND_PORT"))
+            self.assertTrue(hasattr(config, "BACKEND_PORT"))
+            self.assertTrue(hasattr(config, "BACKEND_HOST"))
         except ImportError as e:
             self.fail(f"Failed to import config module: {e}")
 
@@ -104,9 +117,12 @@ class TestConfigurationLoading(unittest.TestCase):
         """Test that constants can be imported."""
         try:
             from config.constants import (
-                FRONTEND_PORT, BACKEND_PORT, BACKEND_HOST,
-                GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT
+                BACKEND_PORT,
+                FRONTEND_PORT,
+                GENERATED_BACKEND_PORT,
+                GENERATED_FRONTEND_PORT,
             )
+
             self.assertIsInstance(FRONTEND_PORT, int)
             self.assertIsInstance(BACKEND_PORT, int)
             self.assertIsInstance(GENERATED_FRONTEND_PORT, int)
@@ -119,7 +135,8 @@ class TestConfigurationLoading(unittest.TestCase):
         try:
             sys.path.insert(0, str(self.project_root))
             import rxconfig
-            self.assertTrue(hasattr(rxconfig, 'config'))
+
+            self.assertTrue(hasattr(rxconfig, "config"))
         except ImportError as e:
             self.fail(f"Failed to import rxconfig: {e}")
 
@@ -129,6 +146,7 @@ class TestPortAvailability(unittest.TestCase):
 
     def test_check_port_method(self):
         """Test method to check if port is available."""
+
         def is_port_in_use(port):
             """Check if a port is in use."""
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -147,18 +165,26 @@ class TestPortAvailability(unittest.TestCase):
     def test_configured_ports_conflict(self):
         """Test that configured ports don't conflict with each other."""
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        
+
         try:
             from config import (
-                FRONTEND_PORT, BACKEND_PORT,
-                GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT
+                BACKEND_PORT,
+                FRONTEND_PORT,
+                GENERATED_BACKEND_PORT,
+                GENERATED_FRONTEND_PORT,
             )
 
-            ports = [FRONTEND_PORT, BACKEND_PORT, GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT]
+            ports = [
+                FRONTEND_PORT,
+                BACKEND_PORT,
+                GENERATED_FRONTEND_PORT,
+                GENERATED_BACKEND_PORT,
+            ]
             unique_ports = set(ports)
 
-            self.assertEqual(len(ports), len(unique_ports),
-                           f"Port conflict detected: {ports}")
+            self.assertEqual(
+                len(ports), len(unique_ports), f"Port conflict detected: {ports}"
+            )
         except ImportError as e:
             self.skipTest(f"Could not import config: {e}")
 
@@ -184,24 +210,27 @@ class TestRunScripts(unittest.TestCase):
         """Test that run scripts are executable."""
         scripts = [
             self.project_root / "workflows" / "run.sh",
-            self.project_root / "generated" / "netsuite_integration_hub" / "run.sh"
+            self.project_root / "generated" / "netsuite_integration_hub" / "run.sh",
         ]
 
         for script in scripts:
             if script.exists():
-                self.assertTrue(os.access(script, os.X_OK),
-                              f"Script not executable: {script}")
+                self.assertTrue(
+                    os.access(script, os.X_OK), f"Script not executable: {script}"
+                )
 
     def test_generated_app_run_script(self):
         """Test that generated app has run script."""
         generated_app = self.project_root / "generated" / "netsuite_integration_hub"
-        
+
         if not generated_app.exists():
             self.skipTest("NetSuite Integration Hub not found")
 
         run_script = generated_app / "run.sh"
         self.assertTrue(run_script.exists(), "Generated app run.sh not found")
-        self.assertTrue(os.access(run_script, os.X_OK), "Generated app run.sh not executable")
+        self.assertTrue(
+            os.access(run_script, os.X_OK), "Generated app run.sh not executable"
+        )
 
 
 class TestApplicationStructure(unittest.TestCase):
@@ -219,7 +248,7 @@ class TestApplicationStructure(unittest.TestCase):
             "generated",
             "workflows",
             "tests",
-            "reflex"
+            "reflex",
         ]
 
         for dir_name in required_dirs:
@@ -245,4 +274,3 @@ class TestApplicationStructure(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

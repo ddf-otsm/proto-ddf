@@ -8,7 +8,7 @@ The **NetSuite Integration Hub** is a comprehensive showcase application demonst
 
 ### 1. Multi-Source Support (6 Sources)
 - **CSV File** - Import customer data from CSV files
-- **JSON API** - Connect to JSON REST endpoints  
+- **JSON API** - Connect to JSON REST endpoints
 - **Database** - Direct database connections
 - **REST API** - Generic REST API integration
 - **Salesforce** - Salesforce CRM connector
@@ -88,7 +88,7 @@ Each data source has unique sample data with different field structures to demon
 # The run script handles everything:
 # - Initializes the reflex submodule
 # - Creates virtual environment
-# - Installs reflex from submodule  
+# - Installs reflex from submodule
 # - Detects and displays your IP address
 ./run.sh
 
@@ -270,11 +270,11 @@ rx.cond(
 def connect_source(self):
     self.progress = 0
     yield  # Update UI
-    
+
     time.sleep(0.5)
     self.progress = 50
     yield  # Update UI again
-    
+
     # Load data
     self.source_records = self.sample_data[self.selected_source]
 ```
@@ -374,5 +374,3 @@ For more information:
 - See `QUICKSTART.md` for getting started
 - Check `EXAMPLES.md` for real integrations
 - Read `README.md` for full documentation
-
-

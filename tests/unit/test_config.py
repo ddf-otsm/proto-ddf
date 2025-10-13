@@ -8,11 +8,11 @@ Tests cover:
 - Port conflict resolution
 """
 
-import unittest
 import json
 import os
-import tempfile
 import shutil
+import tempfile
+import unittest
 from pathlib import Path
 
 
@@ -32,8 +32,14 @@ class TestPortConfiguration(unittest.TestCase):
     def test_port_range_validation(self):
         """Test that ports are within valid range (3000-5000)."""
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        from config import FRONTEND_PORT, BACKEND_PORT, GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT
+        from config import (
+            BACKEND_PORT,
+            FRONTEND_PORT,
+            GENERATED_BACKEND_PORT,
+            GENERATED_FRONTEND_PORT,
+        )
 
         # Check all ports are in range
         self.assertGreaterEqual(FRONTEND_PORT, 3000, "Frontend port below minimum")
@@ -42,34 +48,61 @@ class TestPortConfiguration(unittest.TestCase):
         self.assertGreaterEqual(BACKEND_PORT, 3000, "Backend port below minimum")
         self.assertLessEqual(BACKEND_PORT, 5000, "Backend port above maximum")
 
-        self.assertGreaterEqual(GENERATED_FRONTEND_PORT, 3000, "Generated frontend port below minimum")
-        self.assertLessEqual(GENERATED_FRONTEND_PORT, 5000, "Generated frontend port above maximum")
+        self.assertGreaterEqual(
+            GENERATED_FRONTEND_PORT, 3000, "Generated frontend port below minimum"
+        )
+        self.assertLessEqual(
+            GENERATED_FRONTEND_PORT, 5000, "Generated frontend port above maximum"
+        )
 
-        self.assertGreaterEqual(GENERATED_BACKEND_PORT, 3000, "Generated backend port below minimum")
-        self.assertLessEqual(GENERATED_BACKEND_PORT, 5000, "Generated backend port above maximum")
+        self.assertGreaterEqual(
+            GENERATED_BACKEND_PORT, 3000, "Generated backend port below minimum"
+        )
+        self.assertLessEqual(
+            GENERATED_BACKEND_PORT, 5000, "Generated backend port above maximum"
+        )
 
     def test_port_uniqueness(self):
         """Test that all assigned ports are unique."""
         import sys
-        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        from config import FRONTEND_PORT, BACKEND_PORT, GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT
 
-        ports = [FRONTEND_PORT, BACKEND_PORT, GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT]
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+        from config import (
+            BACKEND_PORT,
+            FRONTEND_PORT,
+            GENERATED_BACKEND_PORT,
+            GENERATED_FRONTEND_PORT,
+        )
+
+        ports = [
+            FRONTEND_PORT,
+            BACKEND_PORT,
+            GENERATED_FRONTEND_PORT,
+            GENERATED_BACKEND_PORT,
+        ]
         unique_ports = set(ports)
 
-        self.assertEqual(len(ports), len(unique_ports), 
-                        f"Port conflict detected: {ports}")
+        self.assertEqual(
+            len(ports), len(unique_ports), f"Port conflict detected: {ports}"
+        )
 
     def test_port_persistence(self):
         """Test that ports are persisted to JSON file."""
-        config_file = Path(__file__).parent.parent.parent / "config" / ".port_config.json"
-        
+        config_file = (
+            Path(__file__).parent.parent.parent / "config" / ".port_config.json"
+        )
+
         if config_file.exists():
-            with open(config_file, 'r') as f:
+            with open(config_file, "r") as f:
                 config = json.load(f)
 
             # Check all expected keys exist
-            expected_keys = ["backend", "frontend", "generated_backend", "generated_frontend"]
+            expected_keys = [
+                "backend",
+                "frontend",
+                "generated_backend",
+                "generated_frontend",
+            ]
             for key in expected_keys:
                 self.assertIn(key, config, f"Missing key in config: {key}")
 
@@ -80,10 +113,13 @@ class TestPortConfiguration(unittest.TestCase):
     def test_backend_host_configuration(self):
         """Test that backend host is configured correctly."""
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
         from config import BACKEND_HOST
 
-        self.assertEqual(BACKEND_HOST, "0.0.0.0", "Backend host should be 0.0.0.0 for network access")
+        self.assertEqual(
+            BACKEND_HOST, "0.0.0.0", "Backend host should be 0.0.0.0 for network access"
+        )
 
 
 class TestApplicationConfiguration(unittest.TestCase):
@@ -92,11 +128,13 @@ class TestApplicationConfiguration(unittest.TestCase):
     def setUp(self):
         """Set up test environment."""
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
     def test_app_name(self):
         """Test application name is set correctly."""
         from config.constants import APP_NAME
+
         self.assertEqual(APP_NAME, "proto_ddf_app")
 
     def test_supported_sources(self):
@@ -109,7 +147,7 @@ class TestApplicationConfiguration(unittest.TestCase):
             "Database",
             "REST API",
             "Salesforce",
-            "Webhook"
+            "Webhook",
         ]
 
         self.assertEqual(len(SUPPORTED_SOURCES), 6, "Expected 6 data sources")
@@ -120,13 +158,7 @@ class TestApplicationConfiguration(unittest.TestCase):
         """Test NetSuite field mapping configuration."""
         from config.constants import NETSUITE_FIELDS
 
-        expected_fields = [
-            "Customer Name",
-            "Email",
-            "Phone",
-            "Address",
-            "Account ID"
-        ]
+        expected_fields = ["Customer Name", "Email", "Phone", "Address", "Account ID"]
 
         self.assertEqual(len(NETSUITE_FIELDS), 5, "Expected 5 NetSuite fields")
         for field in expected_fields:
@@ -139,15 +171,27 @@ class TestApplicationConfiguration(unittest.TestCase):
         required_patterns = ["name", "email", "phone", "address", "id"]
 
         for pattern in required_patterns:
-            self.assertIn(pattern, FIELD_MAPPING_PATTERNS, f"Missing field pattern: {pattern}")
-            self.assertIsInstance(FIELD_MAPPING_PATTERNS[pattern], list, 
-                                f"Pattern {pattern} should be a list")
-            self.assertGreater(len(FIELD_MAPPING_PATTERNS[pattern]), 0, 
-                             f"Pattern {pattern} should have at least one mapping")
+            self.assertIn(
+                pattern, FIELD_MAPPING_PATTERNS, f"Missing field pattern: {pattern}"
+            )
+            self.assertIsInstance(
+                FIELD_MAPPING_PATTERNS[pattern],
+                list,
+                f"Pattern {pattern} should be a list",
+            )
+            self.assertGreater(
+                len(FIELD_MAPPING_PATTERNS[pattern]),
+                0,
+                f"Pattern {pattern} should have at least one mapping",
+            )
 
     def test_integration_settings(self):
         """Test integration settings are within valid ranges."""
-        from config.constants import DEFAULT_SUCCESS_RATE, SYNC_DELAY_SECONDS, CONNECTION_DELAY_SECONDS
+        from config.constants import (
+            CONNECTION_DELAY_SECONDS,
+            DEFAULT_SUCCESS_RATE,
+            SYNC_DELAY_SECONDS,
+        )
 
         # Success rate should be between 0 and 1
         self.assertGreaterEqual(DEFAULT_SUCCESS_RATE, 0.0)
@@ -160,4 +204,3 @@ class TestApplicationConfiguration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -130,4 +130,3 @@ cat ~/vars/jenkins_admin_password_port17843.txt
 ---
 
 **Keep this card handy!** 🚀
-

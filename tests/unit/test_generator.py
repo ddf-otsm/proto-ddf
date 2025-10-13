@@ -8,9 +8,9 @@ Tests cover:
 - Generated app tracking
 """
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 from pathlib import Path
 
 # Add project root to path
@@ -24,6 +24,7 @@ class TestGeneratorState(unittest.TestCase):
         """Set up test environment."""
         # Import after path is set
         from proto_ddf_app.generator import GeneratorState
+
         self.state_class = GeneratorState
 
     def test_initial_state(self):
@@ -58,12 +59,12 @@ class TestGeneratorState(unittest.TestCase):
         # Set project name and try to generate
         test_name = "TestApp"
         state.set_project_name(test_name)
-        
+
         self.assertEqual(state.project_name, test_name)
-        
+
         # Try generating (note: this is a generator function in Reflex)
         # We can test that it exists and is callable
-        self.assertTrue(hasattr(state, 'generate_app'))
+        self.assertTrue(hasattr(state, "generate_app"))
         self.assertTrue(callable(state.generate_app))
 
     def test_project_name_setting(self):
@@ -92,6 +93,7 @@ class TestGeneratorComponents(unittest.TestCase):
         """Test that app card component can be imported."""
         try:
             from proto_ddf_app.generator import app_card
+
             self.assertTrue(callable(app_card))
         except ImportError as e:
             self.fail(f"Failed to import app_card: {e}")
@@ -100,14 +102,16 @@ class TestGeneratorComponents(unittest.TestCase):
         """Test that index function can be imported."""
         try:
             from proto_ddf_app.generator import index
+
             self.assertTrue(callable(index))
         except ImportError as e:
             self.fail(f"Failed to import index: {e}")
-    
+
     def test_generator_app_import(self):
         """Test that generator app can be imported."""
         try:
             from proto_ddf_app.generator import app
+
             self.assertIsNotNone(app)
         except ImportError as e:
             self.fail(f"Failed to import app: {e}")
@@ -122,8 +126,12 @@ class TestGeneratedAppStructure(unittest.TestCase):
 
     def test_generated_directory_exists(self):
         """Test that generated directory exists."""
-        self.assertTrue(self.generated_dir.exists(), "Generated directory does not exist")
-        self.assertTrue(self.generated_dir.is_dir(), "Generated path is not a directory")
+        self.assertTrue(
+            self.generated_dir.exists(), "Generated directory does not exist"
+        )
+        self.assertTrue(
+            self.generated_dir.is_dir(), "Generated path is not a directory"
+        )
 
     def test_netsuite_hub_exists(self):
         """Test that NetSuite Integration Hub example exists."""
@@ -138,11 +146,7 @@ class TestGeneratedAppStructure(unittest.TestCase):
             self.skipTest("NetSuite Integration Hub not found")
 
         # Check required files
-        required_files = [
-            "rxconfig.py",
-            "netsuite_integration_hub.py",
-            "run.sh"
-        ]
+        required_files = ["rxconfig.py", "netsuite_integration_hub.py", "run.sh"]
 
         for file in required_files:
             file_path = netsuite_hub / file
@@ -156,4 +160,3 @@ class TestGeneratedAppStructure(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -139,7 +139,7 @@ The test suite includes:
   - Port persistence and uniqueness
   - Application constants
   - Field mapping patterns
-  
+
 - **Generator Tests** (`test_generator.py`)
   - Generator state management
   - UI component imports

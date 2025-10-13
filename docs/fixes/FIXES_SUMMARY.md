@@ -330,5 +330,3 @@ Once you fix the Python version, you'll have:
 - ✅ Documentation
 
 Need help? Check [DEBUGGING.md](DEBUGGING.md) or [PYTHON_VERSION_ISSUE.md](PYTHON_VERSION_ISSUE.md)
-
-

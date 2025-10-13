@@ -518,7 +518,3 @@ $ python3 demo.py
 
 **Ready to see it in action?**
 Run `./run.sh` and open http://localhost:3000 in your browser!
-
-
-
-

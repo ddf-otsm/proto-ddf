@@ -44,4 +44,3 @@ Each app shares the centralized port configuration from `config/` in the root di
 ## Adding Custom Apps
 
 You can manually add apps to this directory or use the Proto-DDF generator interface to create new ones.
-

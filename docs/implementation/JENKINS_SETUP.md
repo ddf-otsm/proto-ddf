@@ -1,7 +1,7 @@
 # Jenkins CI/CD Setup - proto-ddf
 
-**Project**: NetSuite Integration Hub (proto-ddf)  
-**Type**: Python/Reflex Web Application  
+**Project**: NetSuite Integration Hub (proto-ddf)
+**Type**: Python/Reflex Web Application
 **Jenkins Instance**: Shared local instance (http://localhost:17843)
 
 ---
@@ -205,10 +205,10 @@ stage('Run Tests') {
         sh '''
             cd ${APP_DIR}
             source ${VENV_DIR}/bin/activate
-            
+
             # Install pytest
             pip install pytest pytest-cov
-            
+
             # Run tests (if you create a tests/ directory)
             pytest tests/ -v --cov=proto_ddf_app
         '''
@@ -458,8 +458,8 @@ If you make improvements to the Jenkins setup:
 
 ---
 
-**Status**: ✅ Ready for use  
-**Last Updated**: October 10, 2025  
+**Status**: ✅ Ready for use
+**Last Updated**: October 10, 2025
 **Maintained by**: Development Team
 
 ---
@@ -501,4 +501,3 @@ Add to your `README.md`:
 ---
 
 **Happy CI/CD!** 🚀
-

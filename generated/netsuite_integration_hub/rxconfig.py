@@ -14,31 +14,34 @@ Configuration:
 - Plugins: Sitemap and Tailwind V4 support with error handling
 """
 
-import reflex as rx
 import logging
 import sys
 from pathlib import Path
 
+import reflex as rx
+
 # Import centralized configuration from parent Proto-DDF project
 # Generated apps use separate ports from the generator interface
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from config import GENERATED_FRONTEND_PORT, GENERATED_BACKEND_PORT, BACKEND_HOST
+from config import BACKEND_HOST, GENERATED_BACKEND_PORT, GENERATED_FRONTEND_PORT
 
 # Configure comprehensive logging for debugging and monitoring
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         # File handler for persistent logs specific to this app
-        logging.FileHandler('netsuite_integration_hub.log'),
+        logging.FileHandler("netsuite_integration_hub.log"),
         # Console handler for immediate feedback during development
-        logging.StreamHandler(sys.stdout)
-    ]
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 
 logger = logging.getLogger(__name__)
 logger.info("Loading NetSuite Integration Hub configuration")
-logger.info(f"Network configuration - Backend: {BACKEND_HOST}:{GENERATED_BACKEND_PORT}, Frontend: {GENERATED_FRONTEND_PORT}")
+logger.info(
+    f"Network configuration - Backend: {BACKEND_HOST}:{GENERATED_BACKEND_PORT}, Frontend: {GENERATED_FRONTEND_PORT}"
+)
 
 config = rx.Config(
     app_name="netsuite_integration_hub",
@@ -54,8 +57,9 @@ config = rx.Config(
     plugins=[
         rx.plugins.SitemapPlugin(),
         rx.plugins.TailwindV4Plugin(),
-    ]
+    ],
 )
 
-logger.info(f"Config loaded - Backend: {config.backend_host}:{config.backend_port}, Frontend: {config.frontend_port}")
-
+logger.info(
+    f"Config loaded - Backend: {config.backend_host}:{config.backend_port}, Frontend: {config.frontend_port}"
+)

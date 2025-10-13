@@ -1,7 +1,7 @@
 """Non-sensitive configuration constants for proto-ddf application."""
 
-import random
 import json
+import random
 import socket
 from pathlib import Path
 
@@ -46,7 +46,7 @@ def _get_or_generate_port(port_type: str, min_port: int, max_port: int) -> int:
     # Try to load existing configuration
     if PORT_CONFIG_FILE.exists():
         try:
-            with open(PORT_CONFIG_FILE, 'r') as f:
+            with open(PORT_CONFIG_FILE, "r") as f:
                 config = json.load(f)
                 if port_type in config:
                     saved_port = config[port_type]
@@ -54,7 +54,9 @@ def _get_or_generate_port(port_type: str, min_port: int, max_port: int) -> int:
                     if _is_port_available(saved_port):
                         return saved_port
                     else:
-                        print(f"⚠️  Saved port {saved_port} for {port_type} is in use, generating new port")
+                        print(
+                            f"⚠️  Saved port {saved_port} for {port_type} is in use, generating new port"
+                        )
         except (json.JSONDecodeError, IOError):
             pass
 
@@ -69,24 +71,24 @@ def _get_or_generate_port(port_type: str, min_port: int, max_port: int) -> int:
     else:
         # If we can't find an available port after many attempts, use a random one anyway
         port = random.randint(min_port, max_port)
-    
+
     # Save configuration
     config = {}
     if PORT_CONFIG_FILE.exists():
         try:
-            with open(PORT_CONFIG_FILE, 'r') as f:
+            with open(PORT_CONFIG_FILE, "r") as f:
                 config = json.load(f)
         except (json.JSONDecodeError, IOError):
             pass
-    
+
     config[port_type] = port
-    
+
     try:
-        with open(PORT_CONFIG_FILE, 'w') as f:
+        with open(PORT_CONFIG_FILE, "w") as f:
             json.dump(config, f, indent=2)
     except IOError:
         pass  # Continue even if we can't save
-    
+
     return port
 
 
@@ -100,10 +102,10 @@ if FRONTEND_PORT == BACKEND_PORT:
     FRONTEND_PORT = (BACKEND_PORT + 1) if BACKEND_PORT < 5000 else (BACKEND_PORT - 1)
     # Update the saved config
     try:
-        with open(PORT_CONFIG_FILE, 'r') as f:
+        with open(PORT_CONFIG_FILE, "r") as f:
             config = json.load(f)
         config["frontend"] = FRONTEND_PORT
-        with open(PORT_CONFIG_FILE, 'w') as f:
+        with open(PORT_CONFIG_FILE, "w") as f:
             json.dump(config, f, indent=2)
     except (json.JSONDecodeError, IOError):
         pass
@@ -113,23 +115,37 @@ GENERATED_BACKEND_PORT = _get_or_generate_port("generated_backend", 3000, 5000)
 GENERATED_FRONTEND_PORT = _get_or_generate_port("generated_frontend", 3000, 5000)
 
 # Ensure generated app ports are different from generator ports and from each other
-while (GENERATED_FRONTEND_PORT == GENERATED_BACKEND_PORT or
-       GENERATED_FRONTEND_PORT in [FRONTEND_PORT, BACKEND_PORT] or
-       GENERATED_BACKEND_PORT in [FRONTEND_PORT, BACKEND_PORT]):
+while (
+    GENERATED_FRONTEND_PORT == GENERATED_BACKEND_PORT
+    or GENERATED_FRONTEND_PORT in [FRONTEND_PORT, BACKEND_PORT]
+    or GENERATED_BACKEND_PORT in [FRONTEND_PORT, BACKEND_PORT]
+):
     if GENERATED_FRONTEND_PORT == GENERATED_BACKEND_PORT:
-        GENERATED_FRONTEND_PORT = (GENERATED_BACKEND_PORT + 1) if GENERATED_BACKEND_PORT < 5000 else (GENERATED_BACKEND_PORT - 1)
+        GENERATED_FRONTEND_PORT = (
+            (GENERATED_BACKEND_PORT + 1)
+            if GENERATED_BACKEND_PORT < 5000
+            else (GENERATED_BACKEND_PORT - 1)
+        )
     elif GENERATED_FRONTEND_PORT in [FRONTEND_PORT, BACKEND_PORT]:
-        GENERATED_FRONTEND_PORT = (GENERATED_FRONTEND_PORT + 1) if GENERATED_FRONTEND_PORT < 5000 else (GENERATED_FRONTEND_PORT - 1)
+        GENERATED_FRONTEND_PORT = (
+            (GENERATED_FRONTEND_PORT + 1)
+            if GENERATED_FRONTEND_PORT < 5000
+            else (GENERATED_FRONTEND_PORT - 1)
+        )
     elif GENERATED_BACKEND_PORT in [FRONTEND_PORT, BACKEND_PORT]:
-        GENERATED_BACKEND_PORT = (GENERATED_BACKEND_PORT + 1) if GENERATED_BACKEND_PORT < 5000 else (GENERATED_BACKEND_PORT - 1)
+        GENERATED_BACKEND_PORT = (
+            (GENERATED_BACKEND_PORT + 1)
+            if GENERATED_BACKEND_PORT < 5000
+            else (GENERATED_BACKEND_PORT - 1)
+        )
 
     # Update the saved config
     try:
-        with open(PORT_CONFIG_FILE, 'r') as f:
+        with open(PORT_CONFIG_FILE, "r") as f:
             config = json.load(f)
         config["generated_backend"] = GENERATED_BACKEND_PORT
         config["generated_frontend"] = GENERATED_FRONTEND_PORT
-        with open(PORT_CONFIG_FILE, 'w') as f:
+        with open(PORT_CONFIG_FILE, "w") as f:
             json.dump(config, f, indent=2)
     except (json.JSONDecodeError, IOError):
         pass
@@ -145,7 +161,7 @@ SUPPORTED_SOURCES = [
     "Database",
     "REST API",
     "Salesforce",
-    "Webhook"
+    "Webhook",
 ]
 
 # Integration Settings
@@ -154,19 +170,35 @@ SYNC_DELAY_SECONDS = 0.3  # Delay between syncing records
 CONNECTION_DELAY_SECONDS = 0.5  # Delay during connection simulation
 
 # NetSuite Field Mapping
-NETSUITE_FIELDS = [
-    "Customer Name",
-    "Email",
-    "Phone",
-    "Address",
-    "Account ID"
-]
+NETSUITE_FIELDS = ["Customer Name", "Email", "Phone", "Address", "Account ID"]
 
 # Field Mapping Patterns
 FIELD_MAPPING_PATTERNS = {
-    "name": ["Customer Name", "name", "company", "org_name", "account_name", "entity_name"],
+    "name": [
+        "Customer Name",
+        "name",
+        "company",
+        "org_name",
+        "account_name",
+        "entity_name",
+    ],
     "email": ["Email", "email", "contact_email", "email_address", "primary_email"],
     "phone": ["Phone", "phone", "tel", "phone_number", "contact_phone", "phone_num"],
-    "address": ["Address", "location", "city", "region", "billing_city", "headquarters"],
-    "id": ["Account ID", "id", "customer_id", "cust_id", "api_id", "sf_id", "webhook_id"]
+    "address": [
+        "Address",
+        "location",
+        "city",
+        "region",
+        "billing_city",
+        "headquarters",
+    ],
+    "id": [
+        "Account ID",
+        "id",
+        "customer_id",
+        "cust_id",
+        "api_id",
+        "sf_id",
+        "webhook_id",
+    ],
 }

@@ -5,6 +5,13 @@
 # Other dependencies can be added below as needed
 reflex==0.8.15.dev1
 
+# Development and quality tools
+pre-commit>=4.0.0
+ruff>=0.9.0
+black>=24.10.0
+isort>=5.13.0
+safety>=3.0.0
+
 # Test dependencies
 pytest>=8.4.2
 pytest-cov>=7.0.0

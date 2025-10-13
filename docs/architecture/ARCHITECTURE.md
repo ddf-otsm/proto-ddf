@@ -176,7 +176,7 @@ UI re-renders automatically
 ```python
 class State(rx.State):
     counter: int = 0
-    
+
     def increment(self):
         self.counter += 1
         # UI updates automatically!
@@ -463,6 +463,3 @@ This separation ensures:
 ---
 
 **Next Steps**: See [EXAMPLES.md](EXAMPLES.md) for real-world integration implementations.
-
-
-

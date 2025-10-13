@@ -10,7 +10,7 @@
   "python.analysis.autoSearchPaths": true,
   "python.analysis.extraPaths": [
     "./api",
-    "./services", 
+    "./services",
     "./src",
     "./scripts",
     "./tests"
@@ -103,4 +103,4 @@
   "cursor.composer.mode": "chat",
   "cursor.composer.autoComplete": true,
   "cursor.composer.autoCompleteMode": "inline"
-} 
+}

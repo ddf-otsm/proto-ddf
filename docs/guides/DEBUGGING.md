@@ -228,9 +228,9 @@ import time
 def sync_to_netsuite(self):
     start = time.time()
     logger.info("Sync started")
-    
+
     # ... your code ...
-    
+
     elapsed = time.time() - start
     logger.info(f"Sync completed in {elapsed:.2f} seconds")
 ```
@@ -365,6 +365,3 @@ Example:
 ---
 
 **Need more help?** Check [ARCHITECTURE.md](ARCHITECTURE.md) for system design details.
-
-
-

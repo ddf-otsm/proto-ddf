@@ -57,13 +57,13 @@ case "$TEST_SCOPE" in
         echo ""
         python -m pytest tests/unit/ -v --tb=short
         ;;
-    
+
     integration)
         echo -e "${BLUE}🔗 Running integration tests...${NC}"
         echo ""
         python -m pytest tests/integration/ -v --tb=short
         ;;
-    
+
     coverage)
         echo -e "${BLUE}📊 Running tests with coverage...${NC}"
         echo ""
@@ -71,27 +71,27 @@ case "$TEST_SCOPE" in
         echo ""
         echo -e "${GREEN}✅ Coverage report generated in htmlcov/index.html${NC}"
         ;;
-    
+
     all|*)
         echo -e "${BLUE}🧪 Running all tests...${NC}"
         echo ""
-        
+
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${YELLOW}   Unit Tests${NC}"
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         python -m pytest tests/unit/ -v --tb=short || UNIT_FAILED=1
-        
+
         echo ""
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${YELLOW}   Integration Tests${NC}"
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         python -m pytest tests/integration/ -v --tb=short || INTEGRATION_FAILED=1
-        
+
         echo ""
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${YELLOW}   Test Summary${NC}"
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-        
+
         if [ -z "$UNIT_FAILED" ] && [ -z "$INTEGRATION_FAILED" ]; then
             echo -e "${GREEN}✅ All tests passed!${NC}"
             exit 0
@@ -105,4 +105,3 @@ esac
 
 echo ""
 echo -e "${GREEN}✅ Tests completed successfully!${NC}"
-

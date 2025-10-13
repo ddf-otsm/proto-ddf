@@ -55,6 +55,3 @@ echo ""
 
 # Run reflex with debug logging
 reflex run --loglevel debug 2>&1 | tee debug_output.log
-
-
-

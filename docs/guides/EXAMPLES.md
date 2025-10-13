@@ -24,18 +24,18 @@ from typing import Optional
 
 class State(rx.State):
     uploaded_file: Optional[str] = None
-    
+
     async def handle_csv_upload(self, files: list[rx.UploadFile]):
         """Handle CSV file upload and parse data."""
         if not files:
             return
-        
+
         file = files[0]
         content = await file.read()
-        
+
         # Parse CSV
         df = pd.read_csv(io.BytesIO(content))
-        
+
         # Convert to records
         self.source_records = df.to_dict('records')
         self.source_fields = list(df.columns)
@@ -68,43 +68,43 @@ from typing import Dict, List
 class State(rx.State):
     api_url: str = ""
     api_key: str = ""
-    
+
     async def connect_rest_api(self):
         """Connect to a REST API and fetch data."""
         self.integration_status = IntegrationStatus.CONNECTING
         self.progress = 0
         yield
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 headers = {"Authorization": f"Bearer {self.api_key}"}
-                
+
                 self.progress = 30
                 yield
-                
+
                 response = await client.get(
                     self.api_url,
                     headers=headers,
                     timeout=30.0
                 )
-                
+
                 self.progress = 60
                 yield
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     self.source_records = data.get("records", [])
-                    
+
                     if self.source_records:
                         self.source_fields = list(self.source_records[0].keys())
-                    
+
                     self.progress = 100
                     self.integration_status = IntegrationStatus.SUCCESS
                     self.integration_message = f"Connected successfully! Retrieved {len(self.source_records)} records"
                 else:
                     self.integration_status = IntegrationStatus.ERROR
                     self.integration_message = f"API Error: {response.status_code}"
-                    
+
         except Exception as e:
             self.integration_status = IntegrationStatus.ERROR
             self.integration_message = f"Connection failed: {str(e)}"
@@ -152,13 +152,13 @@ class State(rx.State):
     db_user: str = ""
     db_password: str = ""
     db_query: str = ""
-    
+
     async def connect_database(self):
         """Connect to PostgreSQL and fetch data."""
         self.integration_status = IntegrationStatus.CONNECTING
         self.progress = 0
         yield
-        
+
         try:
             # Connect to database
             conn = await asyncpg.connect(
@@ -168,28 +168,28 @@ class State(rx.State):
                 user=self.db_user,
                 password=self.db_password
             )
-            
+
             self.progress = 40
             yield
-            
+
             # Execute query
             rows = await conn.fetch(self.db_query)
-            
+
             self.progress = 80
             yield
-            
+
             # Convert to records
             self.source_records = [dict(row) for row in rows]
-            
+
             if self.source_records:
                 self.source_fields = list(self.source_records[0].keys())
-            
+
             await conn.close()
-            
+
             self.progress = 100
             self.integration_status = IntegrationStatus.SUCCESS
             self.integration_message = f"Connected to database! Retrieved {len(self.source_records)} records"
-            
+
         except Exception as e:
             self.integration_status = IntegrationStatus.ERROR
             self.integration_message = f"Database error: {str(e)}"
@@ -235,13 +235,13 @@ class State(rx.State):
     sf_password: str = ""
     sf_security_token: str = ""
     sf_domain: str = "login"  # or "test" for sandbox
-    
+
     def connect_salesforce(self):
         """Connect to Salesforce and fetch accounts."""
         self.integration_status = IntegrationStatus.CONNECTING
         self.progress = 0
         yield
-        
+
         try:
             # Connect to Salesforce
             sf = Salesforce(
@@ -250,10 +250,10 @@ class State(rx.State):
                 security_token=self.sf_security_token,
                 domain=self.sf_domain
             )
-            
+
             self.progress = 40
             yield
-            
+
             # Query accounts
             query = """
                 SELECT Id, Name, Email__c, Phone, BillingCity
@@ -261,26 +261,26 @@ class State(rx.State):
                 WHERE IsDeleted = False
                 LIMIT 100
             """
-            
+
             result = sf.query(query)
-            
+
             self.progress = 80
             yield
-            
+
             # Extract records
             self.source_records = result['records']
-            
+
             # Remove Salesforce metadata fields
             for record in self.source_records:
                 record.pop('attributes', None)
-            
+
             if self.source_records:
                 self.source_fields = list(self.source_records[0].keys())
-            
+
             self.progress = 100
             self.integration_status = IntegrationStatus.SUCCESS
             self.integration_message = f"Connected to Salesforce! Retrieved {len(self.source_records)} accounts"
-            
+
         except Exception as e:
             self.integration_status = IntegrationStatus.ERROR
             self.integration_message = f"Salesforce error: {str(e)}"
@@ -320,7 +320,7 @@ import json
 class State(rx.State):
     webhook_data: List[Dict] = []
     webhook_secret: str = ""
-    
+
     def start_webhook_listener(self):
         """Start listening for webhooks."""
         self.integration_message = "Webhook listener started on /api/webhook"
@@ -335,15 +335,15 @@ async def webhook_handler(request: Request):
     try:
         # Verify webhook secret if needed
         auth_header = request.headers.get("Authorization")
-        
+
         # Parse webhook data
         data = await request.json()
-        
+
         # Store webhook data (in production, use database)
         # State.webhook_data.append(data)
-        
+
         return {"status": "success", "message": "Webhook received"}
-        
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -375,11 +375,11 @@ import re
 
 class State(rx.State):
     field_transformations: Dict[str, str] = {}
-    
+
     def add_field_transformation(self, source_field: str, transform_type: str):
         """Add a transformation to a field."""
         self.field_transformations[source_field] = transform_type
-    
+
     def apply_transformations(self, value: str, transform_type: str) -> str:
         """Apply transformation to a value."""
         transformations = {
@@ -390,7 +390,7 @@ class State(rx.State):
             "remove_spaces": lambda v: v.replace(" ", ""),
             "trim": lambda v: v.strip()
         }
-        
+
         transform_func = transformations.get(transform_type)
         if transform_func:
             try:
@@ -398,29 +398,29 @@ class State(rx.State):
             except:
                 return value
         return value
-    
+
     def sync_with_transformations(self):
         """Sync data with field transformations applied."""
         self.integration_status = IntegrationStatus.SYNCING
         self.mapped_records = []
-        
+
         for record in self.source_records:
             mapped = {}
-            
+
             for source_field, netsuite_field in self.field_mapping.items():
                 if source_field in record:
                     value = record[source_field]
-                    
+
                     # Apply transformation if configured
                     if source_field in self.field_transformations:
                         transform_type = self.field_transformations[source_field]
                         value = self.apply_transformations(value, transform_type)
-                    
+
                     mapped[netsuite_field] = value
-            
+
             mapped["_status"] = "success"
             self.mapped_records.append(mapped)
-        
+
         self.integration_status = IntegrationStatus.SUCCESS
         self.integration_message = f"Synced {len(self.mapped_records)} records with transformations"
 
@@ -460,7 +460,7 @@ class State(rx.State):
     ns_consumer_secret: str = ""
     ns_token_id: str = ""
     ns_token_secret: str = ""
-    
+
     def create_netsuite_session(self) -> OAuth1Session:
         """Create authenticated NetSuite session."""
         return OAuth1Session(
@@ -470,19 +470,19 @@ class State(rx.State):
             resource_owner_secret=self.ns_token_secret,
             realm=self.ns_account_id
         )
-    
+
     async def sync_to_real_netsuite(self):
         """Sync records to real NetSuite instance."""
         self.integration_status = IntegrationStatus.SYNCING
         self.progress = 0
         yield
-        
+
         session = self.create_netsuite_session()
         base_url = f"https://{self.ns_account_id}.suitetalk.api.netsuite.com/services/rest/record/v1"
-        
+
         successful = 0
         failed = 0
-        
+
         for i, record in enumerate(self.mapped_records):
             try:
                 # Create customer in NetSuite
@@ -494,13 +494,13 @@ class State(rx.State):
                         "addressLine1": record.get("Address")
                     }
                 }
-                
+
                 response = session.post(
                     f"{base_url}/customer",
                     json=customer_data,
                     headers={"Content-Type": "application/json"}
                 )
-                
+
                 if response.status_code in [200, 201, 204]:
                     record["_status"] = "success"
                     record["_netsuite_id"] = response.json().get("id")
@@ -509,15 +509,15 @@ class State(rx.State):
                     record["_status"] = "error"
                     record["_error"] = f"NetSuite API Error: {response.status_code}"
                     failed += 1
-                    
+
             except Exception as e:
                 record["_status"] = "error"
                 record["_error"] = str(e)
                 failed += 1
-            
+
             self.progress = int((i + 1) / len(self.mapped_records) * 100)
             yield
-        
+
         self.successful_syncs = successful
         self.failed_syncs = failed
         self.integration_status = IntegrationStatus.SUCCESS
@@ -574,7 +574,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class State(rx.State):
-    
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10)
@@ -586,24 +586,24 @@ class State(rx.State):
             result = await self.sync_record_to_netsuite(record)
             logger.info(f"Successfully synced record: {record.get('id')}")
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to sync record: {record.get('id')}, Error: {str(e)}")
             raise
-    
+
     def validate_record(self, record: Dict) -> tuple[bool, str]:
         """Validate a record before syncing."""
         required_fields = ["Customer Name", "Email"]
-        
+
         for field in required_fields:
             if not record.get(field):
                 return False, f"Missing required field: {field}"
-        
+
         # Email validation
         email = record.get("Email")
         if email and "@" not in email:
             return False, f"Invalid email format: {email}"
-        
+
         return True, "Valid"
 ```
 
@@ -627,7 +627,7 @@ def test_field_mapping():
     state = State()
     state.source_fields = ["name", "email", "phone"]
     state.auto_map_fields()
-    
+
     assert "name" in state.field_mapping
     assert state.field_mapping["name"] == "Customer Name"
     assert state.field_mapping["email"] == "Email"
@@ -635,11 +635,11 @@ def test_field_mapping():
 def test_record_validation():
     """Test record validation."""
     state = State()
-    
+
     valid_record = {"Customer Name": "Test Corp", "Email": "test@example.com"}
     is_valid, message = state.validate_record(valid_record)
     assert is_valid
-    
+
     invalid_record = {"Customer Name": "", "Email": "invalid"}
     is_valid, message = state.validate_record(invalid_record)
     assert not is_valid
@@ -657,7 +657,7 @@ from typing import List
 
 class State(rx.State):
     batch_size: int = 100
-    
+
     async def sync_in_batches(self):
         """Sync records in batches for better performance."""
         total = len(self.source_records)
@@ -665,18 +665,18 @@ class State(rx.State):
             self.source_records[i:i + self.batch_size]
             for i in range(0, total, self.batch_size)
         ]
-        
+
         for i, batch in enumerate(batches):
             tasks = [self.sync_record_to_netsuite(record) for record in batch]
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             # Process results
             for result in results:
                 if isinstance(result, Exception):
                     self.failed_syncs += 1
                 else:
                     self.successful_syncs += 1
-            
+
             self.progress = int((i + 1) / len(batches) * 100)
             yield
 ```
@@ -693,7 +693,3 @@ class State(rx.State):
 6. Deploy to production
 
 For more information, see the [main README](README.md) and [Quick Start Guide](QUICKSTART.md).
-
-
-
-

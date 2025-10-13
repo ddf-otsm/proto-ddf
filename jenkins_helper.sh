@@ -31,12 +31,12 @@ export JENKINSFILE="Jenkinsfile.local"
 function jenkins_status() {
     echo -e "${BLUE}📊 Jenkins Status${NC}"
     echo "===================="
-    
+
     if lsof -i :${JENKINS_PORT} | grep LISTEN > /dev/null; then
         echo -e "${GREEN}✅ Jenkins is running${NC}"
         echo "   URL: ${JENKINS_URL}"
         echo "   Port: ${JENKINS_PORT}"
-        
+
         # Check if process ID file exists
         if [ -f "$HOME/vars/jenkins.pid" ]; then
             PID=$(cat "$HOME/vars/jenkins.pid")
@@ -50,13 +50,13 @@ function jenkins_status() {
 
 function jenkins_start() {
     echo -e "${BLUE}🚀 Starting Jenkins...${NC}"
-    
+
     # Check if already running
     if lsof -i :${JENKINS_PORT} | grep LISTEN > /dev/null; then
         echo -e "${YELLOW}⚠️  Jenkins is already running on port ${JENKINS_PORT}${NC}"
         return 1
     fi
-    
+
     # Start Jenkins
     /opt/homebrew/opt/openjdk@21/bin/java \
         -Dmail.smtp.starttls.enable=true \
@@ -64,17 +64,17 @@ function jenkins_start() {
         --httpListenAddress=127.0.0.1 \
         --httpPort=${JENKINS_PORT} \
         > "$HOME/vars/jenkins.log" 2>&1 &
-    
+
     # Save PID
     echo $! > "$HOME/vars/jenkins.pid"
-    
+
     echo -e "${GREEN}✅ Jenkins started${NC}"
     echo "   URL: ${JENKINS_URL}"
     echo "   PID: $(cat $HOME/vars/jenkins.pid)"
     echo ""
     echo "   Waiting for Jenkins to be ready..."
     sleep 10
-    
+
     # Wait for Jenkins to be accessible
     for i in {1..30}; do
         if curl -s -o /dev/null -w "%{http_code}" "${JENKINS_URL}" | grep -q "200\|403"; then
@@ -88,7 +88,7 @@ function jenkins_start() {
 
 function jenkins_stop() {
     echo -e "${BLUE}🛑 Stopping Jenkins...${NC}"
-    
+
     if [ -f "$HOME/vars/jenkins.pid" ]; then
         PID=$(cat "$HOME/vars/jenkins.pid")
         if kill "$PID" 2>/dev/null; then
@@ -100,7 +100,7 @@ function jenkins_stop() {
         fi
     else
         echo -e "${YELLOW}⚠️  No PID file found${NC}"
-        
+
         # Try to find and kill Jenkins process
         JENKINS_PID=$(lsof -ti :${JENKINS_PORT})
         if [ ! -z "$JENKINS_PID" ]; then
@@ -145,19 +145,19 @@ function jenkins_password() {
 
 function jenkins_build() {
     echo -e "${BLUE}🔨 Triggering build for ${PROJECT_NAME}...${NC}"
-    
+
     # Check if Jenkins is running
     if ! lsof -i :${JENKINS_PORT} | grep LISTEN > /dev/null; then
         echo -e "${RED}❌ Jenkins is not running${NC}"
         echo "   Start it with: jenkins_start"
         return 1
     fi
-    
+
     echo "   Pipeline: ${PIPELINE_NAME}"
     echo "   This requires authentication - use Jenkins UI or API token"
     echo ""
     echo "   URL: ${JENKINS_URL}/job/${PIPELINE_NAME}/build"
-    
+
     # Open the build page
     open "${JENKINS_URL}/job/${PIPELINE_NAME}/"
 }
@@ -198,4 +198,3 @@ else
     echo -e "${GREEN}✅ Jenkins helper loaded for ${PROJECT_NAME}${NC}"
     echo "   Type 'jenkins_help' for available commands"
 fi
-

@@ -73,7 +73,7 @@ Use this checklist to verify your setup is correct.
 - [ ] All documentation files present
   ```bash
   ls *.md
-  # Should show: README.md, QUICKSTART.md, EXAMPLES.md, 
+  # Should show: README.md, QUICKSTART.md, EXAMPLES.md,
   #              VISUAL_GUIDE.md, SUMMARY.md, ARCHITECTURE.md,
   #              DOCUMENTATION_INDEX.md, CHECKLIST.md
   ```
@@ -115,7 +115,7 @@ Use this checklist to verify your setup is correct.
   ```bash
   # macOS:
   ipconfig getifaddr en0
-  
+
   # Linux:
   hostname -I | awk '{print $1}'
   ```
@@ -145,7 +145,7 @@ Use this checklist to verify your setup is correct.
   📱 Access the application at:
      Local:    http://127.0.0.1:3000
      Network:  http://192.168.x.x:3000
-  
+
   🔌 Backend API running on:
      http://0.0.0.0:8000
   ```

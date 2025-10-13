@@ -426,7 +426,3 @@ Choose your path:
 **Happy Integrating! 🔄**
 
 For questions or issues, refer to the Troubleshooting section in QUICKSTART.md or check the GitHub repository.
-
-
-
-

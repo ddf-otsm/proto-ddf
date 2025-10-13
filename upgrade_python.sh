@@ -77,22 +77,22 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     echo "🚀 Starting setup..."
     echo ""
-    
+
     echo "📦 Step 1: Removing old venv..."
     rm -rf venv
-    
+
     echo "📦 Step 2: Creating new venv with $PYTHON_CMD..."
     $PYTHON_CMD -m venv venv
-    
+
     echo "🔧 Step 3: Activating venv..."
     source venv/bin/activate
-    
+
     echo "⬆️  Step 4: Upgrading pip..."
     pip install --upgrade pip setuptools wheel
-    
+
     echo "📥 Step 5: Installing Reflex from submodule..."
     pip install -e ./reflex
-    
+
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "✅ Setup complete!"
@@ -109,4 +109,3 @@ else
     echo ""
     echo "Setup cancelled. Run this script again when ready!"
 fi
-

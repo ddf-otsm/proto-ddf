@@ -237,8 +237,8 @@ WITHOUT the worker errors!
 
 ## 🎯 Summary
 
-**Problem**: Python 3.9 → Workers crash  
-**Solution**: Python 3.10+ → Workers work  
+**Problem**: Python 3.9 → Workers crash
+**Solution**: Python 3.10+ → Workers work
 
 **Quick Fix**:
 ```bash
@@ -254,5 +254,3 @@ reflex run
 ---
 
 **Need help?** Check [DEBUGGING.md](DEBUGGING.md) for detailed debugging steps.
-
-
