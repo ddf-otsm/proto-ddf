@@ -70,10 +70,10 @@ pipeline {
                     echo "Python version:"
                     python --version
                     
-                    # Check reflex installation
-                    echo ""
-                    echo "Reflex version:"
-                    python -c "import reflex; print(reflex.__version__)"
+                # Check reflex installation
+                echo ""
+                echo "Reflex installed:"
+                python -c "import reflex; print('✅ Reflex imported successfully')"
                     
                     # List installed packages
                     echo ""
