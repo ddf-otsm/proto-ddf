@@ -37,8 +37,32 @@ proto-ddf/
 
 ## 🚀 Quick Start
 
+### Using Makefile (Recommended)
+
+```bash
+# Show all available commands
+make help
+
+# Run the Proto-DDF generator
+make run
+
+# Run tests
+make test
+
+# Check project status
+make status
+```
+
+See the [Makefile Guide](docs/guides/MAKEFILE_GUIDE.md) for all available commands.
+
 ### 1. Run the Generator Interface
 
+**Option A: Using Make (Recommended)**
+```bash
+make run
+```
+
+**Option B: Direct Script**
 ```bash
 ./workflows/run.sh
 ```
@@ -51,6 +75,12 @@ This will start the Proto-DDF generator interface where you can:
 
 ### 2. Run a Generated App
 
+**Option A: Using Make**
+```bash
+make run-generated APP=netsuite_integration_hub
+```
+
+**Option B: Direct Script**
 ```bash
 cd generated/netsuite_integration_hub
 ./run.sh

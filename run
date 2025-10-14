@@ -5,18 +5,6 @@
 
 echo "🔄 Starting NetSuite Integration Hub..."
 
-# Determine the project root directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-# Check if we're already in the project root (called from Makefile)
-if [ -f "rxconfig.py" ] && [ -f "Makefile" ]; then
-    PROJECT_ROOT="$(pwd)"
-fi
-
-# Change to project root
-cd "$PROJECT_ROOT" || exit 1
-
 # Check Python version FIRST before creating venv
 echo "🔍 Checking Python version..."
 PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
@@ -47,6 +35,9 @@ if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1
     exit 1
 fi
 
+# Change to parent directory to access project files
+cd ..
+
 # Initialize submodules if needed
 if [ ! -f "reflex/pyproject.toml" ]; then
     echo "🔗 Initializing reflex submodule..."
@@ -75,6 +66,9 @@ if [ ! -f "venv/pyvenv.cfg" ] || ! pip show reflex > /dev/null 2>&1; then
     pip install -q -r requirements.txt 2>/dev/null || true
 fi
 
+# Change back to workflows directory for any workflow-specific operations
+cd workflows || exit
+
 # Get the machine's IP address
 if command -v ipconfig &> /dev/null; then
     # macOS
@@ -91,8 +85,11 @@ fi
 FRONTEND_PORT=$(python3 -c "from config.constants import FRONTEND_PORT; print(FRONTEND_PORT)" 2>/dev/null || echo "3797")
 BACKEND_PORT=$(python3 -c "from config.constants import BACKEND_PORT; print(BACKEND_PORT)" 2>/dev/null || echo "3539")
 
-# Display application startup information and run
+# Change to parent directory for reflex run command and execute in subshell
 (
+    cd .. || exit
+
+    # Display application startup information
     echo "🌟 Starting Proto-DDF Generator Interface..."
     echo ""
     echo "   📱 Generator Interface:"
