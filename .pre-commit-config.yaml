@@ -36,11 +36,12 @@ repos:
       - id: debug-statements
 
   # Python-specific pre-commit hooks
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-      - id: black
-        language_version: python3
+  # Note: Black is disabled to avoid conflicts with ruff-format
+  # - repo: https://github.com/psf/black
+  #   rev: 24.10.0
+  #   hooks:
+  #     - id: black
+  #       language_version: python3
 
   # Import sorting
   - repo: https://github.com/pycqa/isort

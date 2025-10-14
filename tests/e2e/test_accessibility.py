@@ -58,9 +58,9 @@ class TestAccessibility:
 
         # Allow some empty buttons (like color mode toggle with icon)
         # but most should have text
-        assert (
-            len(empty_buttons) < len(buttons) * 0.3
-        ), f"Too many buttons without accessible text: {len(empty_buttons)}/{len(buttons)}"
+        assert len(empty_buttons) < len(buttons) * 0.3, (
+            f"Too many buttons without accessible text: {len(empty_buttons)}/{len(buttons)}"
+        )
 
         logger.info(
             f"✅ Button accessibility: {len(buttons) - len(empty_buttons)}/{len(buttons)} have accessible text"
@@ -119,9 +119,9 @@ class TestAccessibility:
 
         if len(all_inputs) > 0:
             percentage = (labeled_inputs / len(all_inputs)) * 100
-            assert (
-                percentage >= 80
-            ), f"At least 80% of inputs should have labels, got {percentage}%"
+            assert percentage >= 80, (
+                f"At least 80% of inputs should have labels, got {percentage}%"
+            )
             logger.info(
                 f"✅ Input labels: {labeled_inputs}/{len(all_inputs)} ({percentage:.1f}%)"
             )
@@ -155,9 +155,9 @@ class TestKeyboardNavigation:
 
         # Should have focused multiple different elements
         unique_elements = len(set(str(e) for e in focusable_elements))
-        assert (
-            unique_elements >= 3
-        ), f"Should be able to tab through multiple elements, got {unique_elements}"
+        assert unique_elements >= 3, (
+            f"Should be able to tab through multiple elements, got {unique_elements}"
+        )
 
         logger.info(
             f"✅ Keyboard navigation: tabbed through {unique_elements} unique elements"
@@ -180,9 +180,9 @@ class TestKeyboardNavigation:
         backward_element = page.evaluate("document.activeElement.tagName")
 
         # Elements should be focusable in both directions
-        assert (
-            forward_element and backward_element
-        ), "Should be able to tab in both directions"
+        assert forward_element and backward_element, (
+            "Should be able to tab in both directions"
+        )
 
         logger.info(
             f"✅ Backward navigation works: {forward_element} -> {backward_element}"
