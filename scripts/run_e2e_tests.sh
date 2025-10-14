@@ -61,7 +61,7 @@ echo ""
 
 # Check if server is running
 echo "🔍 Checking if Reflex server is running..."
-if ! curl -s http://localhost:$FRONTEND_PORT > /dev/null 2>&1; then
+if ! curl -s "http://localhost:$FRONTEND_PORT" > /dev/null 2>&1; then
     echo "❌ Reflex server is not running on port $FRONTEND_PORT"
     echo ""
     echo "Please start the server in another terminal:"
@@ -93,7 +93,7 @@ pytest "$TEST_PATH" \
     -v \
     --browser "$BROWSER" \
     $HEADED \
-    $SLOWMO \
+    "$SLOWMO" \
     --html=test-report.html \
     --self-contained-html
 
