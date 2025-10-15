@@ -2,6 +2,8 @@
 
 Create plan documents from a conversation review across statuses: backlog (baseline), prioritized (optional), and active (optional). Optionally store a conversation archive stub. Use objective-based naming; do not create `conversation_archiver_*` implementation plans.
 
+Backlink: mini_prompt/lv1/archive_conversation_review_and_plan_mini_prompt.md
+
 ## Command sequence (run in order)
 
 1) Verify repository context
@@ -134,7 +136,16 @@ fi
 
 7) OPTIONAL: Create a conversation archive stub (stores links/summary)
 ```bash
-ARCHIVE_DIR="archive/conversations"
+# Repo-aware archive directory selection (best-guess; no prompts)
+REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null)
+if [[ "$REPO_NAME" == *-fera ]]; then
+  ARCHIVE_DIR="_dev/conversations"
+else
+  ARCHIVE_DIR="docs/conversations"
+fi
+
+# Note: For cross-repo sharing across dadosfera, save into the docs-fera repository at project-level /conversations (outside this repo flow)
+
 ARCHIVE_FILE="${ARCHIVE_DIR}/${DATE}_${OBJ_SLUG}.md"
 gtimeout 5 mkdir -p "$ARCHIVE_DIR"
 cat > "$ARCHIVE_FILE" << EOF
@@ -155,44 +166,8 @@ Notes
 EOF
 ```
 
-8) Stage created/updated files
-```bash
-gtimeout 10 git add "$BL_TARGET"
-```
-
-```bash
-if [ -f "$PR_TARGET" ]; then gtimeout 10 git add "$PR_TARGET"; fi
-```
-
-```bash
-if [ -f "$AC_TARGET" ]; then gtimeout 10 git add "$AC_TARGET"; fi
-```
-
-```bash
-if [ -f "$ARCHIVE_FILE" ]; then gtimeout 10 git add "$ARCHIVE_FILE"; fi
-```
-
-9) Run hooks (if configured)
-```bash
-gtimeout 60 pre-commit run --all-files
-```
-
-10) Commit (single-line, no emojis)
-```bash
-COMMIT_MSG="docs: archive conversation; create/update plans for ${OBJ_SLUG}"
-gtimeout 10 git commit -m "$COMMIT_MSG"
-```
-
-11) Push
-```bash
-gtimeout 15 git push
-```
-
-If push reports no upstream is set (first push for this branch):
-```bash
-gtimeout 15 git push --set-upstream origin $(git branch --show-current)
-```
-
+8) Version control (optional)
+This command intentionally does not stage, commit, or push changes. Handle version control separately if desired.
 ## Notes
 - Baseline: always produce the backlog next-actions doc.
 - Use objective-based naming and link plan files in the backlog doc.
