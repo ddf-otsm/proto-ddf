@@ -738,7 +738,7 @@ def index() -> rx.Component:
             ),
             # Field Mapping
             rx.cond(
-                State.field_mapping.length() > 0,
+                State.field_mapping.items().length() > 0,
                 rx.card(
                     rx.vstack(
                         rx.heading("🔀 Field Mapping", size="5"),
