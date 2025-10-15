@@ -12,11 +12,94 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
-# Extract ports from config
-BACKEND_PORT=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('backend', '3539'))" 2>/dev/null || echo "3539")
-FRONTEND_PORT=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('frontend', '3797'))" 2>/dev/null || echo "3797")
-GENERATED_BACKEND_PORT=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('generated_backend', '4984'))" 2>/dev/null || echo "4984")
-GENERATED_FRONTEND_PORT=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('generated_frontend', '3459'))" 2>/dev/null || echo "3459")
+# Extract ports from config or use dynamic fallback
+BACKEND_PORT=$(python3 -c "
+import json
+try:
+    with open('$CONFIG_FILE') as f:
+        config = json.load(f)
+        print(config.get('backend', '3539'))
+except:
+    # Dynamic fallback
+    import random, socket
+    def is_available(port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(('0.0.0.0', port))
+                return True
+        except:
+            return False
+    for port in [3539] + [random.randint(3000, 5000) for _ in range(10)]:
+        if is_available(port):
+            print(port)
+            break
+" 2>/dev/null || echo "3539")
+
+FRONTEND_PORT=$(python3 -c "
+import json
+try:
+    with open('$CONFIG_FILE') as f:
+        config = json.load(f)
+        print(config.get('frontend', '3797'))
+except:
+    # Dynamic fallback
+    import random, socket
+    def is_available(port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(('0.0.0.0', port))
+                return True
+        except:
+            return False
+    for port in [3797] + [random.randint(3000, 5000) for _ in range(10)]:
+        if is_available(port):
+            print(port)
+            break
+" 2>/dev/null || echo "3797")
+
+GENERATED_BACKEND_PORT=$(python3 -c "
+import json
+try:
+    with open('$CONFIG_FILE') as f:
+        config = json.load(f)
+        print(config.get('generated_backend', '4984'))
+except:
+    # Dynamic fallback
+    import random, socket
+    def is_available(port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(('0.0.0.0', port))
+                return True
+        except:
+            return False
+    for port in [4984] + [random.randint(3000, 5000) for _ in range(10)]:
+        if is_available(port):
+            print(port)
+            break
+" 2>/dev/null || echo "4984")
+
+GENERATED_FRONTEND_PORT=$(python3 -c "
+import json
+try:
+    with open('$CONFIG_FILE') as f:
+        config = json.load(f)
+        print(config.get('generated_frontend', '3459'))
+except:
+    # Dynamic fallback
+    import random, socket
+    def is_available(port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(('0.0.0.0', port))
+                return True
+        except:
+            return False
+    for port in [3459] + [random.randint(3000, 5000) for _ in range(10)]:
+        if is_available(port):
+            print(port)
+            break
+" 2>/dev/null || echo "3459")
 
 echo "🔍 Checking ports: backend=$BACKEND_PORT, frontend=$FRONTEND_PORT, gen_backend=$GENERATED_BACKEND_PORT, gen_frontend=$GENERATED_FRONTEND_PORT"
 

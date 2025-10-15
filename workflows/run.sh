@@ -3,7 +3,85 @@
 # NetSuite Integration Hub - Run Script
 # This script sets up and runs the Reflex application
 
-echo "🔄 Starting NetSuite Integration Hub..."
+# Parse command line arguments
+PARAMS=""
+while (( "$#" )); do
+  case "$1" in
+    -p1|--param1)
+      if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+        PARAM1="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    -p2|--param2)
+      if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+        PARAM2="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    --param1=*)
+      PARAM1="${1#*=}"
+      shift 1
+      ;;
+    --param2=*)
+      PARAM2="${1#*=}"
+      shift 1
+      ;;
+    --log=*)
+      LOG_LEVEL="${1#*=}"
+      shift 1
+      ;;
+    -l|--log)
+      if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+        LOG_LEVEL="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    -*|--*=) # unsupported flags
+      echo "Error: Unsupported flag $1" >&2
+      echo "Usage: $0 [--param1=value1] [-p1 value1] [--param2=value2] [-p2 value2] [--log=LEVEL] [-l LEVEL]"
+      exit 1
+      ;;
+    *) # preserve positional arguments
+      PARAMS="$PARAMS $1"
+      shift
+      ;;
+  esac
+done
+
+# Display ASCII header with parameters
+echo ""
+echo "╔══════════════════════════════════════════════════════════════════════════════╗"
+echo "║                            🚀 PROTO-DDF 🚀                                ║"
+echo "║                       Reflex Application Generator                        ║"
+echo "╠══════════════════════════════════════════════════════════════════════════════╣"
+if [ -n "$PARAM1" ] || [ -n "$PARAM2" ] || [ -n "$LOG_LEVEL" ]; then
+    echo "║ PARAMETERS:                                                              ║"
+    [ -n "$PARAM1" ] && printf "║   param1: %-60s ║\\n" "$PARAM1"
+    [ -n "$PARAM2" ] && printf "║   param2: %-60s ║\\n" "$PARAM2"
+    [ -n "$LOG_LEVEL" ] && printf "║   log: %-64s ║\\n" "$LOG_LEVEL"
+    echo "╠══════════════════════════════════════════════════════════════════════════════╣"
+else
+    echo "║ No custom parameters specified                                           ║"
+    echo "╠══════════════════════════════════════════════════════════════════════════════╣"
+fi
+echo "║ Starting NetSuite Integration Hub...                                     ║"
+echo "╚══════════════════════════════════════════════════════════════════════════════╝"
+echo ""
+
+# Set default log level if not specified
+if [ -z "$LOG_LEVEL" ]; then
+    LOG_LEVEL="ERROR"
+fi
 
 # Determine the project root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -88,25 +166,89 @@ fi
 
 # Retrieve dynamically assigned ports from centralized configuration
 # Ports are randomly selected (3000-5000) and persisted in config/.port_config.json
-FRONTEND_PORT=$(python3 -c "from config.constants import FRONTEND_PORT; print(FRONTEND_PORT)" 2>/dev/null || echo "3797")
-BACKEND_PORT=$(python3 -c "from config.constants import BACKEND_PORT; print(BACKEND_PORT)" 2>/dev/null || echo "3539")
+FRONTEND_PORT=$(python3 -c "
+import sys
+sys.path.insert(0, '$PROJECT_ROOT')
+from config.constants import FRONTEND_PORT
+print(FRONTEND_PORT)
+" 2>/dev/null || python3 -c "
+import random
+import socket
+import json
+from pathlib import Path
+
+def is_port_available(port):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(('0.0.0.0', port))
+            return True
+    except OSError:
+        return False
+
+# Try to find an available port in range
+for _ in range(100):
+    port = random.randint(3000, 5000)
+    if is_port_available(port):
+        print(port)
+        break
+else:
+    print('3797')  # fallback
+" 2>/dev/null || echo "3797")
+
+BACKEND_PORT=$(python3 -c "
+import sys
+sys.path.insert(0, '$PROJECT_ROOT')
+from config.constants import BACKEND_PORT
+print(BACKEND_PORT)
+" 2>/dev/null || python3 -c "
+import random
+import socket
+
+def is_port_available(port):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(('0.0.0.0', port))
+            return True
+    except OSError:
+        return False
+
+# Try to find an available port in range, different from frontend
+frontend_port = int('$FRONTEND_PORT')
+for _ in range(100):
+    port = random.randint(3000, 5000)
+    if port != frontend_port and is_port_available(port):
+        print(port)
+        break
+else:
+    print('3539')  # fallback
+" 2>/dev/null || echo "3539")
 
 # Display application startup information and run
 (
     echo "🌟 Starting Proto-DDF Generator Interface..."
     echo ""
-    echo "   📱 Generator Interface:"
-    echo "      Local:    http://127.0.0.1:${FRONTEND_PORT}"
-    echo "      Network:  http://${IP_ADDR}:${FRONTEND_PORT}"
+    # ASCII footer with all serving URLs
     echo ""
-    echo "   🔌 Backend API:"
-    echo "      http://0.0.0.0:${BACKEND_PORT}"
-    echo ""
-    echo "   📂 Generated apps are located in: generated/"
-    echo "   🎯 Ports are randomly assigned (3000-5000) and saved in config/.port_config.json"
-    echo "   🔧 To run generated apps: cd generated/<app_name> && ./run.sh"
-    echo ""
-    echo "   Press Ctrl+C to stop the server"
+    echo "╔══════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                              🌐 SERVING URLS 🌐                             ║"
+    echo "╠══════════════════════════════════════════════════════════════════════════════╣"
+    echo "║ 🎨 PROTO-DDF GENERATOR:                                                     ║"
+    printf "║   Frontend: http://127.0.0.1:%-45s ║\\n" "${FRONTEND_PORT}"
+    printf "║   Network:  http://%s:%-45s ║\\n" "${IP_ADDR}" "${FRONTEND_PORT}"
+    echo "║                                                                            ║"
+    echo "║ 🔧 BACKEND API:                                                            ║"
+    printf "║   API:      http://0.0.0.0:%-45s ║\\n" "${BACKEND_PORT}"
+    echo "║                                                                            ║"
+    echo "║ 📱 GENERATED APPLICATIONS:                                                 ║"
+    echo "║   Location: generated/                                                     ║"
+    echo "║   Command:  cd generated/<app_name> && ./run.sh                           ║"
+    echo "║                                                                            ║"
+    echo "║ 📊 PORT CONFIGURATION:                                                     ║"
+    echo "║   File:     config/.port_config.json                                       ║"
+    echo "║   Range:    3000-5000 (randomly assigned)                                  ║"
+    echo "║                                                                            ║"
+    echo "║ 🛑 TO STOP: Press Ctrl+C                                                   ║"
+    echo "╚══════════════════════════════════════════════════════════════════════════════╝"
     echo ""
 
     # Check Node.js version for Reflex compatibility

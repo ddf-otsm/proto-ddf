@@ -25,15 +25,59 @@ make status
 ### Application Commands
 
 #### `make run`
-Run the Proto-DDF generator application.
+Run the Proto-DDF generator application with ERROR log level by default.
 
 ```bash
 make run
 ```
 
+The command displays an ASCII header with all parameters used and an ASCII footer with all serving URLs.
+
+**Example Output:**
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            🚀 PROTO-DDF 🚀                                ║
+║                       Reflex Application Generator                        ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ PARAMETERS:                                                              ║
+║   log: ERROR                                                            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ Starting NetSuite Integration Hub...                                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+[... startup messages ...]
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              🌐 SERVING URLS 🌐                             ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ 🎨 PROTO-DDF GENERATOR:                                                     ║
+║   Frontend: http://127.0.0.1:4565                                          ║
+║   Network:  http://192.168.88.16:4565                                          ║
+║                                                                            ║
+║ 🔧 BACKEND API:                                                            ║
+║   API:      http://0.0.0.0:4411                                          ║
+║                                                                            ║
+║ 📱 GENERATED APPLICATIONS:                                                 ║
+║   Location: generated/                                                     ║
+║   Command:  cd generated/<app_name> && ./run.sh                           ║
+║                                                                            ║
+║ 📊 PORT CONFIGURATION:                                                     ║
+║   File:     config/.port_config.json                                       ║
+║   Range:    3000-5000 (randomly assigned)                                  ║
+║                                                                            ║
+║ 🛑 TO STOP: Press Ctrl+C                                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
 You can pass arguments to the underlying script:
 ```bash
 make run ARGS="--param1=value1 -p2 v2"
+```
+
+Override the default log level:
+```bash
+make run ARGS="--log=DEBUG"
+make run ARGS="-l INFO"
 ```
 
 **Aliases:**
@@ -317,7 +361,14 @@ make run ARGS="--param1=value1 -p2 v2"
 
 This is equivalent to:
 ```bash
-bash workflows/run.sh --param1=value1 -p2 v2
+bash workflows/run.sh --log=ERROR --param1=value1 -p2 v2
+```
+
+**Note:** `make run` automatically adds `--log=ERROR` by default. You can override it:
+
+```bash
+make run ARGS="--log=DEBUG --param1=value1"
+make run ARGS="-l INFO -p1 value1"
 ```
 
 ### To generated apps

@@ -23,7 +23,7 @@ help: ## Show this help message
 
 run: ## Run the Proto-DDF generator application
 	@echo "$(BLUE)🚀 Starting Proto-DDF Generator...$(NC)"
-	@bash workflows/run.sh $(ARGS)
+	@bash workflows/run.sh --log=ERROR $(ARGS)
 
 dev: run ## Alias for 'make run' (development mode)
 
