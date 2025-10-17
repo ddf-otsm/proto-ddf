@@ -12,6 +12,9 @@ black>=24.10.0
 isort>=5.13.0
 safety>=3.0.0
 
+# Process management (optional, enables Windows support for Stop/Restart)
+psutil>=6.0.0
+
 # Test dependencies
 pytest>=8.4.2
 pytest-cov>=7.0.0

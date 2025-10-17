@@ -48,8 +48,8 @@ config = rx.Config(
     app_module_import="netsuite_integration_hub",
     # Bind to all interfaces
     backend_host=BACKEND_HOST,
-    backend_port=GENERATED_BACKEND_PORT,
-    frontend_port=GENERATED_FRONTEND_PORT,
+    backend_port= 3818,
+    frontend_port= 3756,
     # Enable debugging
     loglevel=rx.constants.LogLevel.DEBUG,
     # Helpful for debugging

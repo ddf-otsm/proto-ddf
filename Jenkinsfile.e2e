@@ -1,0 +1,142 @@
+// Jenkinsfile for E2E tests with Playwright
+
+pipeline {
+    agent any
+    
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        timestamps()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+    
+    stages {
+        stage('Setup') {
+            steps {
+                script {
+                    echo "📦 Setting up E2E test environment..."
+                    sh '''
+                        # Create venv if needed
+                        if [ ! -d "venv" ]; then
+                            python3 -m venv venv
+                        fi
+                        
+                        # Activate and install dependencies
+                        source venv/bin/activate
+                        pip install -q --upgrade pip setuptools wheel
+                        pip install -q -e ./reflex
+                        pip install -q -r requirements.txt
+                        
+                        # Install Playwright browsers
+                        python -m playwright install --with-deps chromium
+                    '''
+                }
+            }
+        }
+        
+        stage('Start Generator') {
+            steps {
+                script {
+                    echo "🚀 Starting Proto-DDF generator..."
+                    sh '''
+                        source venv/bin/activate
+                        
+                        # Kill any existing generator processes
+                        pkill -f "reflex run" || true
+                        sleep 2
+                        
+                        # Start generator in background
+                        cd ${WORKSPACE}
+                        timeout 60 reflex run &
+                        GENERATOR_PID=$!
+                        
+                        # Wait for generator to be ready
+                        for i in {1..30}; do
+                            if curl -s http://localhost:3903 > /dev/null 2>&1; then
+                                echo "✅ Generator is ready"
+                                break
+                            fi
+                            echo "⏳ Waiting for generator... ($i/30)"
+                            sleep 2
+                        done
+                        
+                        # Save PID for cleanup
+                        echo $GENERATOR_PID > /tmp/generator.pid
+                    '''
+                }
+            }
+        }
+        
+        stage('Run E2E Tests') {
+            steps {
+                script {
+                    echo "🧪 Running E2E tests..."
+                    sh '''
+                        source venv/bin/activate
+                        
+                        # Run Playwright E2E tests
+                        timeout 1800 python -m pytest tests/e2e/test_process_management.py -v --tb=short || EXIT_CODE=$?
+                        
+                        # Generate test report
+                        if [ -f "report.html" ]; then
+                            echo "📊 Test report generated"
+                        fi
+                        
+                        exit ${EXIT_CODE:-0}
+                    '''
+                }
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                script {
+                    echo "✅ Running unit tests..."
+                    sh '''
+                        source venv/bin/activate
+                        timeout 300 python -m pytest tests/unit/ -v --tb=short
+                    '''
+                }
+            }
+        }
+        
+        stage('Cleanup') {
+            steps {
+                script {
+                    echo "🧹 Cleaning up..."
+                    sh '''
+                        # Kill generator process
+                        if [ -f /tmp/generator.pid ]; then
+                            kill $(cat /tmp/generator.pid) 2>/dev/null || true
+                            rm /tmp/generator.pid
+                        fi
+                        
+                        pkill -f "reflex run" || true
+                        pkill -f "node" || true
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                echo "📝 Generating reports..."
+                // Publish test results if available
+                junit testResults: 'test-results.xml', allowEmptyResults: true
+                
+                // Archive logs
+                archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            }
+        }
+        
+        success {
+            echo "✅ E2E tests passed!"
+        }
+        
+        failure {
+            echo "❌ E2E tests failed!"
+            // Optional: Send notification
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+  "apps": {
+    "test_stock_market": {
+      "backend": 3143,
+      "frontend": 3144
+    },
+    "my_news_website": {
+      "backend": 4392,
+      "frontend": 4393
+    },
+    "netsuite_integration_hub": {
+      "backend": 3818,
+      "frontend": 3756
+    },
+    "app1": {
+      "backend": 3855,
+      "frontend": 4780
+    },
+    "app2": {
+      "backend": 3049,
+      "frontend": 3208
+    }
+  }
+}

@@ -2,12 +2,17 @@
 
 **Proto-DDF** (Prototype Data-Driven Forms) is an AI-powered Reflex application generator that helps you create full-stack Python web applications with a beautiful UI.
 
+> ⚠️ **Important for AI Agents & Developers**: See [`.cursorrules_jenkins`](.cursorrules_jenkins) for mandatory Jenkins usage rules (API-first, no duplicate instances)
+
 ## 🌟 Features
 
 - **🎨 Generator Interface**: Visual interface to create and manage Reflex applications
 - **📦 Template Library**: Pre-built templates for common use cases
 - **🔧 Centralized Config**: Non-sensitive constants managed in `config/`
-- **🎲 Smart Port Assignment**: Random ports (3000-5000) with persistence
+- **🎲 Smart Port Assignment**: Persistent port registry (3000-5000) with file locking
+- **🚀 Auto-Start Apps**: One-click "Open App" auto-starts stopped applications
+- **⏹️ Process Control**: Stop and Restart buttons for running applications
+- **📊 Health Dashboard**: Real-time status monitoring of all generated apps
 - **📁 Organized Structure**: Clear separation between generator and generated apps
 
 ## 📂 Project Structure
@@ -73,12 +78,31 @@ This will start the Proto-DDF generator interface where you can:
 - Manage existing apps
 - Access app documentation
 
-### 2. Run a Generated App
+### 2. Using the Generator Interface
 
-**Option A: Using Make**
-```bash
-make run-generated APP=netsuite_integration_hub
-```
+#### App Management
+- **Open App**: Click the green "Open" button to open a generated app. If it's not running, it will automatically start and wait for it to become available (max 30s timeout).
+- **Restart App**: Click the orange "Restart" button to stop and restart a running app (useful for reloading code changes).
+- **Stop App**: Click the red "Stop" button to gracefully shut down a running app.
+
+#### Health Dashboard
+- **Real-time Status**: The dashboard shows which apps are currently running (green badge) or stopped (red badge).
+- **Port Information**: See generator ports and individual app ports at a glance.
+- **Auto-refresh**: Health status updates automatically every 5-60 seconds (exponential backoff).
+
+#### Port Registry
+Proto-DDF maintains a persistent registry (`config/.port_registry.json`) that:
+- Assigns stable ports to each generated app (same ports across restarts)
+- Prevents port collisions with file locking for concurrent safety
+- Auto-cleans up entries for deleted apps
+- Tracks process IDs (PIDs) for process management
+
+### 3. Run a Generated App
+
+**Option A: Using Generator Interface (Recommended)**
+1. Open the generator: `make run`
+2. Click "Open" on any app card
+3. App auto-starts if needed, then opens in new tab
 
 **Option B: Direct Script**
 ```bash
@@ -93,7 +117,7 @@ cd generated/netsuite_integration_hub
 - **Python 3.10+** (Python 3.11 or 3.13 recommended)
 - **Reflex** (installed from submodule)
 - **Bun** (auto-installed by Reflex for frontend)
-- **Node.js 20.19.0+** (recommended)
+- **Node.js 20.19.0+** (REQUIRED - Reflex compatibility, earlier versions may cause issues)
 
 ## 📱 Generated Applications
 

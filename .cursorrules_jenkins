@@ -1,0 +1,453 @@
+# Jenkins Rules for AI and Developers
+
+## 🚨 CRITICAL: NO DUPLICATE JENKINS INSTANCES
+
+### **RULE: Single Jenkins Instance Policy**
+
+**NEVER start, create, or run Jenkins using:**
+- ❌ `jenkins --httpPort=8080`
+- ❌ `java -jar jenkins.war`
+- ❌ `brew services start jenkins`
+- ❌ Direct Jenkins binary execution
+- ❌ Any custom Jenkins startup command
+
+**ALWAYS use the official management scripts:**
+```bash
+# ✅ CORRECT - Start Jenkins
+~/vars/jenkins_start.sh
+
+# ✅ CORRECT - Stop Jenkins
+~/vars/jenkins_stop.sh
+
+# ✅ CORRECT - Restart Jenkins
+~/vars/jenkins_restart.sh
+
+# ✅ CORRECT - Check status
+~/vars/jenkins_status.sh
+```
+
+### **Pre-Flight Check Before ANY Jenkins Operation**
+
+Before starting Jenkins, **ALWAYS** run this check:
+```bash
+# Check for existing Jenkins processes
+ps aux | grep jenkins | grep -v grep
+
+# If ANY Jenkins process exists:
+# 1. Verify it's on port 17843
+# 2. If on wrong port, stop it immediately
+# 3. Never start a second instance
+```
+
+### **Enforcement Script**
+
+AI agents MUST run this before any Jenkins startup:
+```bash
+#!/bin/bash
+# jenkins_preflight_check.sh
+
+echo "🔍 Jenkins Pre-Flight Check"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Check for existing Jenkins processes
+JENKINS_PROCS=$(ps aux | grep -i jenkins | grep -v grep | grep -v jenkins_preflight_check)
+
+if [ -n "$JENKINS_PROCS" ]; then
+    echo "⚠️  Existing Jenkins process(es) found:"
+    echo "$JENKINS_PROCS"
+    echo ""
+    
+    # Check if on correct port (17843)
+    if echo "$JENKINS_PROCS" | grep -q "17843"; then
+        echo "✅ Jenkins already running on CORRECT port 17843"
+        echo "❌ ABORT: Do not start another instance"
+        exit 1
+    else
+        echo "❌ Jenkins running on WRONG port (not 17843)"
+        echo "🛑 CRITICAL: Unauthorized Jenkins instance detected"
+        echo ""
+        echo "Action required:"
+        echo "  1. Stop unauthorized instance: kill <PID>"
+        echo "  2. Start correct instance: ~/vars/jenkins_start.sh"
+        exit 2
+    fi
+else
+    echo "✅ No existing Jenkins processes"
+    echo "✅ Safe to start Jenkins via: ~/vars/jenkins_start.sh"
+    exit 0
+fi
+```
+
+---
+
+## 📡 API-FIRST JENKINS INTERACTION
+
+### **RULE: Use Jenkins REST API, NOT Browser UI**
+
+**For ALL Jenkins operations, use the API:**
+
+### **1. Jenkins API Helper Functions**
+
+Create and use these helper functions:
+```bash
+# ~/vars/jenkins_api_helpers.sh
+
+JENKINS_URL="http://localhost:17843"
+JENKINS_USER=$(cat ~/vars/jenkins_admin_user.txt)
+JENKINS_PASS=$(cat ~/vars/jenkins_admin_password.txt)
+
+# Get CSRF crumb (required for POST requests)
+jenkins_get_crumb() {
+    curl -s -u "$JENKINS_USER:$JENKINS_PASS" \
+        "$JENKINS_URL/crumbIssuer/api/json"
+}
+
+# Jenkins API call with authentication
+jenkins_api() {
+    local method="$1"
+    local endpoint="$2"
+    local data="$3"
+    
+    local crumb_response=$(jenkins_get_crumb)
+    local crumb_field=$(echo "$crumb_response" | jq -r '.crumbRequestField')
+    local crumb_value=$(echo "$crumb_response" | jq -r '.crumb')
+    
+    if [ "$method" = "GET" ]; then
+        curl -s -u "$JENKINS_USER:$JENKINS_PASS" \
+            "$JENKINS_URL$endpoint"
+    else
+        curl -s -X "$method" \
+            -u "$JENKINS_USER:$JENKINS_PASS" \
+            -H "$crumb_field:$crumb_value" \
+            -H "Content-Type: application/xml" \
+            --data "$data" \
+            "$JENKINS_URL$endpoint"
+    fi
+}
+
+# Get Jenkins version
+jenkins_version() {
+    jenkins_api GET "/api/json" | jq -r '.version'
+}
+
+# List all jobs
+jenkins_list_jobs() {
+    jenkins_api GET "/api/json?tree=jobs[name,color,url]" | jq '.jobs'
+}
+
+# Get job info
+jenkins_job_info() {
+    local job_name="$1"
+    jenkins_api GET "/job/$job_name/api/json"
+}
+
+# Create job from XML
+jenkins_create_job() {
+    local job_name="$1"
+    local config_xml="$2"
+    jenkins_api POST "/createItem?name=$job_name" "$config_xml"
+}
+
+# Trigger build
+jenkins_build_job() {
+    local job_name="$1"
+    jenkins_api POST "/job/$job_name/build" ""
+}
+
+# Get build status
+jenkins_build_status() {
+    local job_name="$1"
+    local build_number="$2"
+    jenkins_api GET "/job/$job_name/$build_number/api/json"
+}
+
+# Get console output
+jenkins_console_output() {
+    local job_name="$1"
+    local build_number="$2"
+    curl -s -u "$JENKINS_USER:$JENKINS_PASS" \
+        "$JENKINS_URL/job/$job_name/$build_number/consoleText"
+}
+
+# Wait for build completion
+jenkins_wait_for_build() {
+    local job_name="$1"
+    local build_number="$2"
+    local max_wait="${3:-600}"  # Default 10 minutes
+    local elapsed=0
+    
+    echo "⏳ Waiting for build $job_name #$build_number to complete..."
+    
+    while [ $elapsed -lt $max_wait ]; do
+        local status=$(jenkins_build_status "$job_name" "$build_number" | jq -r '.result')
+        
+        if [ "$status" != "null" ] && [ -n "$status" ]; then
+            echo "✅ Build completed with status: $status"
+            return 0
+        fi
+        
+        sleep 5
+        elapsed=$((elapsed + 5))
+        echo "   Waiting... ${elapsed}s"
+    done
+    
+    echo "❌ Build did not complete within ${max_wait}s"
+    return 1
+}
+```
+
+### **2. Common API Operations**
+
+**✅ DO THIS** - API-based operations:
+```bash
+# Source the helpers
+source ~/vars/jenkins_api_helpers.sh
+
+# Check Jenkins status
+jenkins_version
+
+# List all jobs
+jenkins_list_jobs
+
+# Create a job
+jenkins_create_job "proto-ddf-e2e" "$(cat job_config.xml)"
+
+# Trigger a build
+jenkins_build_job "proto-ddf-e2e"
+
+# Get last build info
+jenkins_job_info "proto-ddf-e2e" | jq '.lastBuild'
+
+# Get build status
+jenkins_build_status "proto-ddf-e2e" "1"
+
+# Wait for completion and get result
+jenkins_wait_for_build "proto-ddf-e2e" "1"
+jenkins_console_output "proto-ddf-e2e" "1"
+```
+
+**❌ DON'T DO THIS** - Browser-based operations:
+```bash
+# ❌ WRONG - Opening browser
+open http://localhost:17843
+
+# ❌ WRONG - Manual UI clicks
+# "Click on New Item"
+# "Click on Build Now"
+# "Click on Console Output"
+```
+
+### **3. API-First Workflow Example**
+
+Complete pipeline execution via API:
+```bash
+#!/bin/bash
+# jenkins_api_workflow.sh
+
+source ~/vars/jenkins_api_helpers.sh
+
+echo "🚀 Jenkins API-First Workflow"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# 1. Verify Jenkins is running
+echo "[1/6] Checking Jenkins status..."
+VERSION=$(jenkins_version)
+if [ -n "$VERSION" ]; then
+    echo "✅ Jenkins $VERSION running"
+else
+    echo "❌ Jenkins not responding"
+    exit 1
+fi
+
+# 2. Check if job exists
+echo "[2/6] Checking for job..."
+JOB_EXISTS=$(jenkins_list_jobs | jq -r '.[] | select(.name=="proto-ddf-e2e") | .name')
+if [ -z "$JOB_EXISTS" ]; then
+    echo "⚠️  Job not found, creating..."
+    jenkins_create_job "proto-ddf-e2e" "$(cat Jenkinsfile.e2e.xml)"
+    echo "✅ Job created"
+else
+    echo "✅ Job exists"
+fi
+
+# 3. Trigger build
+echo "[3/6] Triggering build..."
+jenkins_build_job "proto-ddf-e2e"
+sleep 3  # Give Jenkins a moment to queue the build
+
+# 4. Get build number
+echo "[4/6] Getting build number..."
+BUILD_NUMBER=$(jenkins_job_info "proto-ddf-e2e" | jq -r '.lastBuild.number')
+echo "✅ Build #$BUILD_NUMBER started"
+
+# 5. Wait for completion
+echo "[5/6] Waiting for build completion..."
+if jenkins_wait_for_build "proto-ddf-e2e" "$BUILD_NUMBER" 600; then
+    # 6. Get results
+    echo "[6/6] Getting results..."
+    STATUS=$(jenkins_build_status "proto-ddf-e2e" "$BUILD_NUMBER" | jq -r '.result')
+    DURATION=$(jenkins_build_status "proto-ddf-e2e" "$BUILD_NUMBER" | jq -r '.duration')
+    
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📊 Build Results"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Job:      proto-ddf-e2e"
+    echo "Build:    #$BUILD_NUMBER"
+    echo "Status:   $STATUS"
+    echo "Duration: $((DURATION / 1000))s"
+    echo ""
+    echo "Console output:"
+    jenkins_console_output "proto-ddf-e2e" "$BUILD_NUMBER" | tail -50
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+else
+    echo "❌ Build did not complete in time"
+    exit 1
+fi
+```
+
+### **4. When Browser UI is Acceptable**
+
+Browser UI usage is **ONLY** acceptable for:
+- ✅ Initial setup wizard (one-time)
+- ✅ Complex plugin configuration (rare)
+- ✅ Visual debugging of pipeline stages (occasional)
+- ✅ Manual inspection of artifacts (as needed)
+
+**Even then, prefer:**
+```bash
+# Instead of opening browser
+open http://localhost:17843/job/proto-ddf-e2e/1/console
+
+# Use API
+jenkins_console_output "proto-ddf-e2e" "1" | less
+```
+
+---
+
+## 📝 AI Agent Instructions
+
+### **For AI Models (Claude, GPT, etc.)**
+
+When asked to work with Jenkins:
+
+1. **ALWAYS check** for existing Jenkins instances first
+2. **NEVER start** Jenkins directly - use `~/vars/jenkins_start.sh`
+3. **PREFER API** over browser interactions
+4. **Source helpers**: `source ~/vars/jenkins_api_helpers.sh`
+5. **Use functions** from jenkins_api_helpers.sh
+6. **Report status** via API calls, not screenshots
+7. **Provide commands** that can be copy-pasted and executed
+
+### **Response Template for Jenkins Tasks**
+
+```markdown
+## Jenkins Operation: [TASK NAME]
+
+### Pre-Flight Check
+```bash
+# Verify Jenkins status
+source ~/vars/jenkins_api_helpers.sh
+jenkins_version
+```
+
+### API-Based Solution
+```bash
+# [Step-by-step API commands]
+```
+
+### Verification
+```bash
+# [API commands to verify success]
+```
+
+### Output
+[Expected API response]
+```
+
+---
+
+## 🔒 Enforcement Mechanisms
+
+### **1. Git Pre-Commit Hook**
+
+Create `.git/hooks/pre-commit`:
+```bash
+#!/bin/bash
+# Check for unauthorized Jenkins commands in committed files
+
+FORBIDDEN_PATTERNS=(
+    "jenkins --httpPort"
+    "java -jar jenkins.war"
+    "brew services start jenkins"
+)
+
+for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
+    if git diff --cached | grep -q "$pattern"; then
+        echo "❌ ERROR: Forbidden Jenkins command detected: $pattern"
+        echo "   Use ~/vars/jenkins_start.sh instead"
+        exit 1
+    fi
+done
+```
+
+### **2. Shell Alias Guards**
+
+Add to `~/.zshrc` or `~/.bashrc`:
+```bash
+# Prevent accidental direct Jenkins startup
+alias jenkins='echo "❌ Use ~/vars/jenkins_start.sh instead" && false'
+
+# Provide shortcuts to correct methods
+alias jenkins-start='~/vars/jenkins_start.sh'
+alias jenkins-stop='~/vars/jenkins_stop.sh'
+alias jenkins-status='~/vars/jenkins_status.sh'
+alias jenkins-api='source ~/vars/jenkins_api_helpers.sh'
+```
+
+### **3. Documentation Links**
+
+Add to all relevant docs:
+```markdown
+⚠️ **Jenkins Usage**: See `.cursorrules_jenkins` for mandatory API-first approach
+```
+
+---
+
+## 📚 Quick Reference Card
+
+```
+╔════════════════════════════════════════════════════════════════╗
+║              JENKINS USAGE QUICK REFERENCE                     ║
+╚════════════════════════════════════════════════════════════════╝
+
+🔴 NEVER DO:
+  ❌ jenkins --httpPort=8080
+  ❌ java -jar jenkins.war
+  ❌ Manual browser operations for automation
+
+🟢 ALWAYS DO:
+  ✅ ~/vars/jenkins_start.sh
+  ✅ source ~/vars/jenkins_api_helpers.sh
+  ✅ jenkins_api GET "/api/json"
+
+📍 Correct Instance:
+  Port: 17843
+  URL: http://localhost:17843
+  
+🔧 Management:
+  Start:   ~/vars/jenkins_start.sh
+  Stop:    ~/vars/jenkins_stop.sh
+  Status:  ~/vars/jenkins_status.sh
+  
+📡 API Helpers:
+  Load:    source ~/vars/jenkins_api_helpers.sh
+  Version: jenkins_version
+  Jobs:    jenkins_list_jobs
+  Build:   jenkins_build_job <name>
+  Status:  jenkins_build_status <name> <num>
+  
+📖 Full docs: .cursorrules_jenkins
+```
+
+

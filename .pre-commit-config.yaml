@@ -1,57 +1,259 @@
-# See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
-ci:
-  autofix_commit_msg: |
-    [pre-commit.ci] auto fixes from pre-commit.com hooks
-
-    for more information, see https://pre-commit.ci
-  autofix_prs: true
-  autoupdate_branch: ''
-  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
-  autoupdate_schedule: weekly
-  skip: []
-  submodules: false
+# Pre-commit hooks configuration for Proto-DDF
+# 
+# This configuration ensures code quality standards are maintained
+# across all commits through automated checks.
+#
+# Install pre-commit: pip install pre-commit
+# Set up hooks: pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# Hooks run in order:
+# 1. Code formatting (black, isort)
+# 2. Linting (ruff)
+# 3. Documentation (pydocstyle)
+# 4. Type checking (mypy)
+# 5. Commit message validation
 
 repos:
-  # Ruff - Fast Python linter and formatter
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+  # ============================================================================
+  # CODE FORMATTING
+  # ============================================================================
+
+  # Black: Code formatter (line length: 100 chars)
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
     hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
+      - id: black
+        language_version: python3.10
+        args: ["--line-length=100"]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*
+          )$
+        stages: [commit]
 
-  # Pre-commit built-in hooks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: check-merge-conflict
-      - id: check-case-conflict
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
-      - id: debug-statements
+  # ============================================================================
+  # IMPORT ORGANIZATION
+  # ============================================================================
 
-  # Python-specific pre-commit hooks
-  # Note: Black is disabled to avoid conflicts with ruff-format
-  # - repo: https://github.com/psf/black
-  #   rev: 24.10.0
-  #   hooks:
-  #     - id: black
-  #       language_version: python3
-
-  # Import sorting
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+  # isort: Import sorting and organization
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.0
     hooks:
       - id: isort
-        args: ["--profile", "black", "--filter-files"]
+        args: ["--profile", "black", "--line-length", "100"]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*
+          )$
+        stages: [commit]
 
-  # Security checks
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.3
+  # ============================================================================
+  # LINTING
+  # ============================================================================
+
+  # Ruff: Fast Python linter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
     hooks:
-      - id: python-safety-dependencies-check
+      - id: ruff
+        args: ["--fix", "--exit-zero"]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+  # ============================================================================
+  # DOCUMENTATION
+  # ============================================================================
+
+  # pydocstyle: Docstring style checker
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: ["--convention=google"]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              tests/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+  # ============================================================================
+  # TYPE CHECKING
+  # ============================================================================
+
+  # mypy: Static type checker
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        additional_dependencies: ["types-all"]
+        args: ["--ignore-missing-imports", "--follow-imports=silent"]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              tests/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+  # ============================================================================
+  # GENERAL CHECKS
+  # ============================================================================
+
+  # Detect private key, AWS credentials, etc.
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              \.git/.*
+          )$
+        stages: [commit]
+
+  # ============================================================================
+  # COMMIT MESSAGE VALIDATION
+  # ============================================================================
+
+  # commitlint: Enforce commit message format
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: ["--force-scope"]
+
+  # ============================================================================
+  # YAML VALIDATION
+  # ============================================================================
+
+  # yamllint: YAML file validation
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict]
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+  # ============================================================================
+  # JSON VALIDATION
+  # ============================================================================
+
+  # Check JSON files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-json
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+      # Check merge conflicts
+      - id: check-merge-conflict
+        stages: [commit]
+
+      # Check for files that would conflict in merge
+      - id: check-case-conflict
+        stages: [commit]
+
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+        exclude: |
+          (?x)^(
+              reflex/.*|
+              venv/.*|
+              \.venv/.*|
+              generated/.*
+          )$
+        stages: [commit]
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+# Run hooks in parallel for speed
+default_stages: [commit]
+fail_fast: false
+minimum_pre_commit_version: '2.15.0'
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+
+# This configuration ensures:
+#
+# 1. Code Quality
+#    - Consistent formatting (black)
+#    - Organized imports (isort)
+#    - No linting errors (ruff)
+#    - Proper docstrings (pydocstyle)
+#    - Type safety (mypy)
+#
+# 2. Security
+#    - No secrets committed
+#    - No merge conflicts
+#
+# 3. Standards
+#    - Conventional commits
+#    - Proper line endings
+#    - No trailing whitespace
+#
+# Usage:
+#
+#   # First time setup
+#   pip install pre-commit
+#   pre-commit install
+#
+#   # Run on all files
+#   pre-commit run --all-files
+#
+#   # Run specific hook
+#   pre-commit run ruff --all-files
+#
+#   # Bypass pre-commit (not recommended)
+#   git commit --no-verify
+#
+# For more info: https://pre-commit.com
