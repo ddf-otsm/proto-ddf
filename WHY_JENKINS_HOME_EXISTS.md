@@ -321,3 +321,5 @@ We chose **jenkins-lts** with brew home because:
 **Status**: Explained and Documented  
 **Recommended Action**: Clean slate (remove ~/.jenkins)
 
+
+
