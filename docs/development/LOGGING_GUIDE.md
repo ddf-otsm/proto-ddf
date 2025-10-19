@@ -123,7 +123,7 @@ from datetime import datetime
 
 class StructuredFormatter(logging.Formatter):
     """Custom formatter for structured logging."""
-    
+
     def format(self, record):
         log_entry = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -134,11 +134,11 @@ class StructuredFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno
         }
-        
+
         # Add extra fields if present
         if hasattr(record, 'extra'):
             log_entry.update(record.extra)
-            
+
         return json.dumps(log_entry)
 
 # Configure logger
@@ -170,7 +170,7 @@ def log_operation(operation_name: str, **context):
     """Context manager for logging operations."""
     start_time = time.time()
     logger.info(f"Starting {operation_name}", extra=context)
-    
+
     try:
         yield
         duration = time.time() - start_time
@@ -209,7 +209,7 @@ def log_performance(operation_name: str):
         def wrapper(*args, **kwargs):
             start_time = time.time()
             logger.debug(f"Starting {operation_name}")
-            
+
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
@@ -244,16 +244,16 @@ def auto_map_fields(self):
 ```python
 def generate_app(self):
     """Generate application with comprehensive logging."""
-    with log_operation("app_generation", 
+    with log_operation("app_generation",
                       app_name=self.project_name,
                       user_id=getattr(self, 'user_id', 'anonymous')):
-        
+
         # Step 1: Validation
         logger.info("Validating project settings", extra={
             "project_name": self.project_name,
             "description": self.project_description
         })
-        
+
         # Step 2: Port allocation
         ports = PORT_REGISTRY.reserve_pair(self.project_name)
         logger.info("Ports allocated", extra={
@@ -261,13 +261,13 @@ def generate_app(self):
             "frontend_port": ports.frontend,
             "app_name": self.project_name
         })
-        
+
         # Step 3: Code generation
         logger.info("Generating application code", extra={
             "template": "reflex_basic",
             "features": ["routing", "state_management", "ui_components"]
         })
-        
+
         # Step 4: File creation
         files_created = []
         for file_path in generated_files:
@@ -276,7 +276,7 @@ def generate_app(self):
                 "file_size": file_path.stat().st_size
             })
             files_created.append(str(file_path))
-        
+
         logger.info("Files created", extra={
             "file_count": len(files_created),
             "files": files_created
@@ -293,7 +293,7 @@ def connect_source(self):
         "source_type": self.selected_source,
         "user_id": getattr(self, 'user_id', 'anonymous')
     })
-    
+
     try:
         # Connection steps
         for step, progress in connection_steps:
@@ -303,21 +303,21 @@ def connect_source(self):
                 "source_type": self.selected_source
             })
             yield
-            
+
         # Data loading
         logger.info("Loading source data", extra={
             "source_type": self.selected_source,
             "record_count": len(self.source_records),
             "field_count": len(self.source_fields)
         })
-        
+
         # Field analysis
         logger.info("Analyzing field patterns", extra={
             "source_fields": self.source_fields,
             "netsuite_fields": self.netsuite_fields,
             "mapping_confidence": mapping_confidence
         })
-        
+
     except Exception as e:
         logger.error("Connection failed", extra={
             "source_type": self.selected_source,
@@ -341,15 +341,15 @@ from pathlib import Path
 
 def setup_logging(app_name: str, log_level: str = "INFO"):
     """Setup centralized logging for application."""
-    
+
     # Create logs directory
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
-    
+
     # Configure root logger
     logger = logging.getLogger()
     logger.setLevel(getattr(logging, log_level.upper()))
-    
+
     # File handler with rotation
     file_handler = logging.handlers.RotatingFileHandler(
         log_dir / f"{app_name}.log",
@@ -358,14 +358,14 @@ def setup_logging(app_name: str, log_level: str = "INFO"):
     )
     file_handler.setFormatter(StructuredFormatter())
     logger.addHandler(file_handler)
-    
+
     # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     ))
     logger.addHandler(console_handler)
-    
+
     return logger
 ```
 
@@ -381,21 +381,21 @@ from datetime import datetime
 
 def analyze_logs(log_file: str):
     """Analyze application logs for insights."""
-    
+
     error_counts = Counter()
     operation_times = {}
     error_types = Counter()
-    
+
     with open(log_file, 'r') as f:
         for line in f:
             try:
                 log_entry = json.loads(line)
-                
+
                 # Count errors
                 if log_entry['level'] == 'ERROR':
                     error_counts[log_entry['message']] += 1
                     error_types[log_entry.get('error_type', 'Unknown')] += 1
-                
+
                 # Track operation times
                 if 'operation' in log_entry and 'duration_ms' in log_entry:
                     op = log_entry['operation']
@@ -403,10 +403,10 @@ def analyze_logs(log_file: str):
                     if op not in operation_times:
                         operation_times[op] = []
                     operation_times[op].append(duration)
-                    
+
             except json.JSONDecodeError:
                 continue
-    
+
     # Print analysis
     print("=== Log Analysis ===")
     print(f"Total errors: {sum(error_counts.values())}")
@@ -423,7 +423,7 @@ def analyze_logs(log_file: str):
 def log_health_check():
     """Log system health metrics."""
     import psutil
-    
+
     logger.info("Health check", extra={
         "cpu_percent": psutil.cpu_percent(),
         "memory_percent": psutil.virtual_memory().percent,

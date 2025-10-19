@@ -58,17 +58,15 @@ class TestAccessibility:
 
         # Allow some empty buttons (like color mode toggle with icon)
         # but most should have text
-        assert len(empty_buttons) < len(buttons) * 0.3, (
-            f"Too many buttons without accessible text: {len(empty_buttons)}/{len(buttons)}"
-        )
+        assert (
+            len(empty_buttons) < len(buttons) * 0.3
+        ), f"Too many buttons without accessible text: {len(empty_buttons)}/{len(buttons)}"
 
         logger.info(
             f"✅ Button accessibility: {len(buttons) - len(empty_buttons)}/{len(buttons)} have accessible text"
         )
 
-    def test_integration_hub_has_proper_landmarks(
-        self, page: Page, integration_hub_url: str
-    ):
+    def test_integration_hub_has_proper_landmarks(self, page: Page, integration_hub_url: str):
         """Test that the Integration Hub has proper ARIA landmarks."""
         try:
             page.goto(integration_hub_url, timeout=15000)
@@ -119,12 +117,8 @@ class TestAccessibility:
 
         if len(all_inputs) > 0:
             percentage = (labeled_inputs / len(all_inputs)) * 100
-            assert percentage >= 80, (
-                f"At least 80% of inputs should have labels, got {percentage}%"
-            )
-            logger.info(
-                f"✅ Input labels: {labeled_inputs}/{len(all_inputs)} ({percentage:.1f}%)"
-            )
+            assert percentage >= 80, f"At least 80% of inputs should have labels, got {percentage}%"
+            logger.info(f"✅ Input labels: {labeled_inputs}/{len(all_inputs)} ({percentage:.1f}%)")
         else:
             logger.info("✅ No input fields to check")
 
@@ -155,13 +149,11 @@ class TestKeyboardNavigation:
 
         # Should have focused multiple different elements
         unique_elements = len(set(str(e) for e in focusable_elements))
-        assert unique_elements >= 3, (
-            f"Should be able to tab through multiple elements, got {unique_elements}"
-        )
+        assert (
+            unique_elements >= 3
+        ), f"Should be able to tab through multiple elements, got {unique_elements}"
 
-        logger.info(
-            f"✅ Keyboard navigation: tabbed through {unique_elements} unique elements"
-        )
+        logger.info(f"✅ Keyboard navigation: tabbed through {unique_elements} unique elements")
 
     def test_can_navigate_with_shift_tab(self, page: Page, base_url: str):
         """Test that users can navigate backwards with Shift+Tab."""
@@ -180,13 +172,9 @@ class TestKeyboardNavigation:
         backward_element = page.evaluate("document.activeElement.tagName")
 
         # Elements should be focusable in both directions
-        assert forward_element and backward_element, (
-            "Should be able to tab in both directions"
-        )
+        assert forward_element and backward_element, "Should be able to tab in both directions"
 
-        logger.info(
-            f"✅ Backward navigation works: {forward_element} -> {backward_element}"
-        )
+        logger.info(f"✅ Backward navigation works: {forward_element} -> {backward_element}")
 
 
 class TestColorContrast:
@@ -212,9 +200,7 @@ class TestColorContrast:
         }"""
         )
 
-        logger.info(
-            f"✅ Page colors - Background: {colors['background']}, Text: {colors['color']}"
-        )
+        logger.info(f"✅ Page colors - Background: {colors['background']}, Text: {colors['color']}")
 
         # Basic assertion: colors should be defined
         assert colors["background"], "Background color should be defined"

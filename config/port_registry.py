@@ -103,11 +103,12 @@ import signal
 import socket
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple, Optional, Any
+from typing import Any, Dict, Optional, Tuple
 
 # Try to import psutil for cross-platform process management
 try:
     import psutil
+
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
@@ -129,7 +130,7 @@ LOCK_FILE = CONFIG_DIR / ".port_registry.lock"
 
 def _is_port_available(port: int, host: str = "0.0.0.0") -> bool:
     """Check if a port is available for binding.
-    
+
     Uses socket binding test for cross-platform reliability.
     """
     try:
@@ -143,7 +144,7 @@ def _is_port_available(port: int, host: str = "0.0.0.0") -> bool:
 
 def _is_process_running(pid: int) -> bool:
     """Check if a process with given PID is running.
-    
+
     Uses signal 0 (no-op) to test process existence without killing it.
     Works on Unix systems (Linux, macOS, BSD).
     """
@@ -159,11 +160,12 @@ def _is_process_running(pid: int) -> bool:
 @dataclass
 class AppPorts:
     """Port assignment for an application.
-    
+
     Attributes:
         backend: Backend API server port
         frontend: Frontend UI server port
     """
+
     backend: int
     frontend: int
 
@@ -171,12 +173,13 @@ class AppPorts:
 @dataclass
 class AppProcessInfo:
     """Process and port information for a running application.
-    
+
     Attributes:
         pid: Process ID of the running application
         backend_port: Backend server port
         frontend_port: Frontend UI port
     """
+
     pid: int
     backend_port: int
     frontend_port: int
@@ -210,7 +213,7 @@ class PortRegistry:
 
     def __init__(self, min_port: int = 3000, max_port: int = 5000) -> None:
         """Initialize the port registry.
-        
+
         Args:
             min_port: Minimum port number for allocation (default 3000)
             max_port: Maximum port number for allocation (default 5000)
@@ -224,7 +227,7 @@ class PortRegistry:
     # ---------- File Locking ----------
     def _acquire_lock(self) -> None:
         """Acquire exclusive lock for registry file operations.
-        
+
         Uses fcntl.flock() for Unix systems to ensure atomic operations.
         Continues gracefully if locking unavailable (degraded mode).
         """
@@ -238,7 +241,7 @@ class PortRegistry:
 
     def _release_lock(self) -> None:
         """Release the registry file lock.
-        
+
         Ensures lock is released even if errors occur.
         Safe to call multiple times or if lock wasn't acquired.
         """
@@ -254,7 +257,7 @@ class PortRegistry:
     # ---------- Persistence ----------
     def _load(self) -> None:
         """Load registry from persistent storage.
-        
+
         Reads JSON file and performs garbage collection on orphaned entries.
         Safe to call even if file doesn't exist yet.
         """
@@ -274,7 +277,7 @@ class PortRegistry:
 
     def _save(self) -> None:
         """Save registry to persistent storage.
-        
+
         Writes current state to JSON file with locking protection.
         Non-fatal: continues if write fails (in-memory state preserved).
         """
@@ -289,17 +292,19 @@ class PortRegistry:
 
     def _garbage_collect(self) -> None:
         """Remove entries for apps that no longer exist in generated/ directory.
-        
+
         Called during load to keep registry clean.
         Automatically attempts to stop processes of deleted apps.
         """
         generated_dir = Path("generated")
         if not generated_dir.exists():
             return
-        
-        existing_apps = {d.name for d in generated_dir.iterdir() if d.is_dir() and not d.name.startswith('.')}
+
+        existing_apps = {
+            d.name for d in generated_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
+        }
         to_remove = []
-        
+
         for app_name in list(self._data["apps"].keys()):
             if app_name not in existing_apps:
                 to_remove.append(app_name)
@@ -312,18 +317,18 @@ class PortRegistry:
                             os.kill(pid, signal.SIGTERM)
                         except Exception:
                             pass
-        
+
         for app_name in to_remove:
             del self._data["apps"][app_name]
 
     # ---------- Queries ----------
     def _reserved_ports(self) -> set[int]:
         """Get set of all currently reserved/in-use ports.
-        
+
         Returns the union of:
         - Generator interface ports (frontend + backend)
         - All generated app ports (frontend + backend for each)
-        
+
         Used to prevent allocating ports that are already assigned.
         """
         ports: set[int] = {GENERATOR_BACKEND_PORT, GENERATOR_FRONTEND_PORT}
@@ -348,15 +353,15 @@ class PortRegistry:
 
     def _pick_available_port(self, forbidden: set[int]) -> int:
         """Select an available port from the configured range.
-        
+
         Allocation strategy:
         1. Random sampling (up to 200 attempts) for efficiency
         2. Sequential sweep if random fails, for coverage
         3. Best-effort fallback if both fail
-        
+
         Args:
             forbidden: Set of ports that cannot be allocated
-            
+
         Returns:
             Available port number in [min_port, max_port] range
         """
@@ -381,10 +386,10 @@ class PortRegistry:
     # ---------- Public API ----------
     def get_ports(self, app_name: str) -> Optional[AppPorts]:
         """Get assigned ports for an app.
-        
+
         Args:
             app_name: Name of the application
-            
+
         Returns:
             AppPorts with backend and frontend ports, or None if not assigned
         """
@@ -407,21 +412,21 @@ class PortRegistry:
     def ensure_ports(self, app_name: str, backend: int | None, frontend: int | None) -> AppPorts:
         """Ensure registry records ports for app. If None provided or ports collide,
         allocate new available ports and persist.
-        
+
         This is the primary allocation method. It:
         - Reuses existing ports if app already assigned and valid
         - Validates requested ports for conflicts
         - Allocates new ports if needed
         - Persists allocation atomically
-        
+
         Args:
             app_name: Name of the application
             backend: Requested backend port or None for automatic allocation
             frontend: Requested frontend port or None for automatic allocation
-            
+
         Returns:
             AppPorts with assigned backend and frontend ports
-            
+
         Algorithm:
             1. If app exists with valid ports: reuse them
             2. Validate requested ports (if provided)
@@ -438,7 +443,13 @@ class PortRegistry:
             b = b_raw if isinstance(b_raw, int) else (int(b_raw) if b_raw is not None else 0)  # type: ignore[arg-type]
             f = f_raw if isinstance(f_raw, int) else (int(f_raw) if f_raw is not None else 0)  # type: ignore[arg-type]
             # Validate they don't collide with others and are within range
-            if b and f and b != f and b not in {GENERATOR_BACKEND_PORT, GENERATOR_FRONTEND_PORT} and f not in {GENERATOR_BACKEND_PORT, GENERATOR_FRONTEND_PORT}:
+            if (
+                b
+                and f
+                and b != f
+                and b not in {GENERATOR_BACKEND_PORT, GENERATOR_FRONTEND_PORT}
+                and f not in {GENERATOR_BACKEND_PORT, GENERATOR_FRONTEND_PORT}
+            ):
                 # If either port is currently occupied by a foreign process, reallocate
                 if not _is_port_available(b) and not _is_port_available(f):
                     # Keep assignment; ports in-use likely belong to the app already
@@ -503,12 +514,12 @@ class PortRegistry:
 
     def reserve_pair(self, app_name: str) -> Tuple[int, int]:
         """Allocate a unique backend/frontend port pair for the app and persist.
-        
+
         Convenience method for allocating new ports without validation.
-        
+
         Args:
             app_name: Name of the application
-            
+
         Returns:
             Tuple of (backend_port, frontend_port)
         """
@@ -517,7 +528,7 @@ class PortRegistry:
 
     def set_pid(self, app_name: str, pid: int) -> None:
         """Record the PID for a running app.
-        
+
         Args:
             app_name: Name of the application
             pid: Process ID of the running application
@@ -528,10 +539,10 @@ class PortRegistry:
 
     def get_pid(self, app_name: str) -> Optional[int]:
         """Get the recorded PID for an app.
-        
+
         Args:
             app_name: Name of the application
-            
+
         Returns:
             Process ID if app is being tracked, None otherwise
         """
@@ -543,15 +554,15 @@ class PortRegistry:
 
     def stop_app(self, app_name: str) -> bool:
         """Stop a running app by its recorded PID.
-        
+
         Uses graceful termination with timeout, falling back to force kill.
         Platform-specific behavior:
         - With psutil: Cross-platform (Windows/Linux/macOS)
         - Without psutil: Unix-only (SIGTERM → SIGKILL)
-        
+
         Args:
             app_name: Name of the application
-            
+
         Returns:
             True if app was stopped, False if not running or error
         """
@@ -576,6 +587,7 @@ class PortRegistry:
                     os.kill(pid, signal.SIGTERM)
                     # Wait briefly for graceful shutdown
                     import time
+
                     for _ in range(10):
                         if not _is_process_running(pid):
                             break
@@ -583,7 +595,7 @@ class PortRegistry:
                     # Force kill if still running
                     if _is_process_running(pid):
                         os.kill(pid, signal.SIGKILL)
-                
+
                 # Clear PID from registry
                 if app_name in self._data["apps"]:
                     self._data["apps"][app_name].pop("pid", None)
@@ -595,10 +607,10 @@ class PortRegistry:
 
     def get_process_info(self, app_name: str) -> Optional[AppProcessInfo]:
         """Get process and port info for an app.
-        
+
         Args:
             app_name: Name of the application
-            
+
         Returns:
             AppProcessInfo with PID and ports, or None if not found
         """
@@ -610,9 +622,9 @@ class PortRegistry:
 
     def release(self, app_name: str) -> None:
         """Remove app from registry and stop its process if running.
-        
+
         Complete cleanup: stops process and removes all tracking info.
-        
+
         Args:
             app_name: Name of the application
         """
@@ -620,5 +632,3 @@ class PortRegistry:
         if app_name in self._data["apps"]:
             del self._data["apps"][app_name]
             self._save()
-
-

@@ -60,12 +60,12 @@ for i in {1..10}; do
     BUILD_STATUS=$(curl -s "$JENKINS_URL/job/$JOB_NAME/$LATEST_BUILD/api/json" 2>/dev/null)
     RESULT=$(echo "$BUILD_STATUS" | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
     BUILDING=$(echo "$BUILD_STATUS" | grep '"building":true' || echo "")
-    
+
     if [ -z "$BUILDING" ] || [ "$RESULT" != "null" ]; then
         echo "✅ Build completed with result: $RESULT"
         break
     fi
-    
+
     echo "⏳ Waiting... (attempt $i/10)"
     sleep 3
 done
@@ -94,4 +94,3 @@ echo "  Job:        $JENKINS_URL/job/$JOB_NAME"
 echo "  Build:      $JENKINS_URL/job/$JOB_NAME/$LATEST_BUILD"
 echo "  Console:    $JENKINS_URL/job/$JOB_NAME/$LATEST_BUILD/consoleText"
 echo ""
-

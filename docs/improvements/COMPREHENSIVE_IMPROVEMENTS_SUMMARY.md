@@ -62,22 +62,22 @@ def stop_app(self, app_name: str) -> bool:
 async def open_app(self, name: str, path: str, port: int, url: str):
     """Open app: auto-start if port is not responding, then redirect."""
     start_time = time.time()
-    
+
     if not self._is_port_open("127.0.0.1", int(port)):
         # Auto-start the app
         process = subprocess.Popen(...)
         logger.info(f"Started {name} with PID {process.pid}")
-        
+
         # Record PID in registry
         PORT_REGISTRY.set_pid(app_name_key, process.pid)
-        
+
         # Wait up to 30s for port to become available
         while time.time() - wait_start < 30:
             if self._is_port_open("127.0.0.1", int(port)):
                 startup_duration = time.time() - start_time
                 logger.info(f"{name} started successfully in {startup_duration:.1f}s")
                 break
-    
+
     # Refresh health and redirect
     yield rx.redirect(url, is_external=True)
 ```
@@ -171,11 +171,11 @@ rx.card(
     rx.vstack(
         # Generator Ports
         rx.text(f"FE {GEN_FRONTEND_PORT} / BE {GEN_BACKEND_PORT}"),
-        
+
         # Stats: Generated Apps, Running
         rx.text(GeneratorState.generated_apps.length()),
         rx.text(GeneratorState.running_count),
-        
+
         # Per-app health badges
         rx.foreach(
             GeneratorState.generated_apps,
@@ -184,10 +184,10 @@ rx.card(
                 color="green" if "up" else "red"
             )
         ),
-        
+
         # Refresh Health button
         rx.button("Refresh Health", on_click=GeneratorState.refresh_health),
-        
+
         # Last action message
         rx.text(GeneratorState.last_action_message, color="gray"),
     )
@@ -401,8 +401,3 @@ All requested improvements have been implemented and tested:
 **Status**: Core architecture improvements complete (5/8 fully done, 3/8 infrastructure ready)
 
 Next steps: E2E tests, documentation updates, and remaining UX enhancements.
-
-
-
-
-

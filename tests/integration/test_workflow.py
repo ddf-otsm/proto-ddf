@@ -28,9 +28,7 @@ class TestVirtualEnvironment(unittest.TestCase):
     def test_venv_exists(self):
         """Test that virtual environment exists."""
         self.assertTrue(self.venv_path.exists(), "Virtual environment not found")
-        self.assertTrue(
-            self.venv_path.is_dir(), "Virtual environment is not a directory"
-        )
+        self.assertTrue(self.venv_path.is_dir(), "Virtual environment is not a directory")
 
     def test_venv_python(self):
         """Test that virtual environment has Python."""
@@ -44,9 +42,7 @@ class TestVirtualEnvironment(unittest.TestCase):
         if not python_path.exists():
             self.skipTest("Python not found in virtual environment")
 
-        result = subprocess.run(
-            [str(python_path), "--version"], capture_output=True, text=True
-        )
+        result = subprocess.run([str(python_path), "--version"], capture_output=True, text=True)
 
         version_str = result.stdout.strip()
         # Extract version number (e.g., "Python 3.11.13" -> "3.11.13")
@@ -54,9 +50,7 @@ class TestVirtualEnvironment(unittest.TestCase):
         major, minor = map(int, version.split(".")[:2])
 
         self.assertGreaterEqual(major, 3, "Python major version should be 3 or higher")
-        self.assertGreaterEqual(
-            minor, 10, "Python minor version should be 10 or higher"
-        )
+        self.assertGreaterEqual(minor, 10, "Python minor version should be 10 or higher")
 
     def test_reflex_installed(self):
         """Test that Reflex is installed in virtual environment."""
@@ -89,9 +83,7 @@ class TestVirtualEnvironment(unittest.TestCase):
             0,
             f"Reflex not installed or import failed.\nStdout: {result.stdout}\nStderr: {result.stderr}",
         )
-        self.assertIn(
-            "SUCCESS", result.stdout, "Reflex import did not complete successfully"
-        )
+        self.assertIn("SUCCESS", result.stdout, "Reflex import did not complete successfully")
 
 
 class TestConfigurationLoading(unittest.TestCase):
@@ -182,9 +174,7 @@ class TestPortAvailability(unittest.TestCase):
             ]
             unique_ports = set(ports)
 
-            self.assertEqual(
-                len(ports), len(unique_ports), f"Port conflict detected: {ports}"
-            )
+            self.assertEqual(len(ports), len(unique_ports), f"Port conflict detected: {ports}")
         except ImportError as e:
             self.skipTest(f"Could not import config: {e}")
 
@@ -215,9 +205,7 @@ class TestRunScripts(unittest.TestCase):
 
         for script in scripts:
             if script.exists():
-                self.assertTrue(
-                    os.access(script, os.X_OK), f"Script not executable: {script}"
-                )
+                self.assertTrue(os.access(script, os.X_OK), f"Script not executable: {script}")
 
     def test_generated_app_run_script(self):
         """Test that generated app has run script."""
@@ -228,9 +216,7 @@ class TestRunScripts(unittest.TestCase):
 
         run_script = generated_app / "run.sh"
         self.assertTrue(run_script.exists(), "Generated app run.sh not found")
-        self.assertTrue(
-            os.access(run_script, os.X_OK), "Generated app run.sh not executable"
-        )
+        self.assertTrue(os.access(run_script, os.X_OK), "Generated app run.sh not executable")
 
 
 class TestApplicationStructure(unittest.TestCase):

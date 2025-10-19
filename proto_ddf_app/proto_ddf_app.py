@@ -266,9 +266,7 @@ class State(rx.State):
     def connect_source(self):
         """Connect to the selected data source."""
         try:
-            logger.info(
-                f"connect_source called - selected_source: {self.selected_source}"
-            )
+            logger.info(f"connect_source called - selected_source: {self.selected_source}")
 
             if not self.selected_source:
                 logger.warning("No source selected")
@@ -471,7 +469,9 @@ class State(rx.State):
             self.total_synced += total_records
             self.last_sync_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.integration_status = IntegrationStatus.SUCCESS
-            self.integration_message = f"Sync completed! {self.successful_syncs} successful, {self.failed_syncs} failed"
+            self.integration_message = (
+                f"Sync completed! {self.successful_syncs} successful, {self.failed_syncs} failed"
+            )
 
             # Add log entry
             log_entry = {
@@ -520,9 +520,7 @@ class State(rx.State):
             logger.error(f"Error in clear_stats: {str(e)}", exc_info=True)
 
 
-def stat_card(
-    title: str, value: str, icon: str = "📊", color: str = "blue"
-) -> rx.Component:
+def stat_card(title: str, value: str, icon: str = "📊", color: str = "blue") -> rx.Component:
     """Create a statistics card."""
     return rx.card(
         rx.vstack(
@@ -597,9 +595,7 @@ def index() -> rx.Component:
                     ),
                     rx.cond(
                         State.last_sync_time != "",
-                        rx.text(
-                            f"Last sync: {State.last_sync_time}", size="2", color="gray"
-                        ),
+                        rx.text(f"Last sync: {State.last_sync_time}", size="2", color="gray"),
                     ),
                     rx.button(
                         "Clear Statistics",
@@ -662,8 +658,7 @@ def index() -> rx.Component:
                                 State.integration_message,
                                 icon="info",
                                 color=rx.cond(
-                                    State.integration_status
-                                    == IntegrationStatus.SUCCESS,
+                                    State.integration_status == IntegrationStatus.SUCCESS,
                                     "blue",
                                     "orange",
                                 ),
@@ -676,9 +671,7 @@ def index() -> rx.Component:
                             | (State.integration_status == IntegrationStatus.SYNCING),
                             rx.vstack(
                                 rx.text("Progress", size="2", weight="medium"),
-                                rx.progress(
-                                    value=State.progress, max=100, width="100%"
-                                ),
+                                rx.progress(value=State.progress, max=100, width="100%"),
                                 rx.text(f"{State.progress}%", size="2", color="gray"),
                                 spacing="2",
                                 width="100%",
@@ -689,14 +682,8 @@ def index() -> rx.Component:
                             rx.button(
                                 "1. Connect to Source",
                                 on_click=State.connect_source,
-                                disabled=(
-                                    State.integration_status
-                                    == IntegrationStatus.CONNECTING
-                                )
-                                | (
-                                    State.integration_status
-                                    == IntegrationStatus.SYNCING
-                                ),
+                                disabled=(State.integration_status == IntegrationStatus.CONNECTING)
+                                | (State.integration_status == IntegrationStatus.SYNCING),
                                 size="3",
                             ),
                             rx.button(
@@ -743,9 +730,7 @@ def index() -> rx.Component:
                                     rx.table.row(
                                         rx.foreach(
                                             State.source_fields,
-                                            lambda field: rx.table.column_header_cell(
-                                                field
-                                            ),
+                                            lambda field: rx.table.column_header_cell(field),
                                         )
                                     )
                                 ),
@@ -755,9 +740,7 @@ def index() -> rx.Component:
                                         lambda record: rx.table.row(
                                             rx.foreach(
                                                 State.source_fields,
-                                                lambda field: rx.table.cell(
-                                                    record[field]
-                                                ),
+                                                lambda field: rx.table.cell(record[field]),
                                             )
                                         ),
                                     )
@@ -788,9 +771,7 @@ def index() -> rx.Component:
                                 lambda item: rx.hstack(
                                     rx.badge(item[0], variant="soft", size="2"),
                                     rx.text("→", size="4"),
-                                    rx.badge(
-                                        item[1], variant="soft", color="green", size="2"
-                                    ),
+                                    rx.badge(item[1], variant="soft", color="green", size="2"),
                                     spacing="2",
                                     align="center",
                                 ),
@@ -990,9 +971,7 @@ def index() -> rx.Component:
                                                     log["status"],
                                                     color=rx.cond(
                                                         (log["status"] == "Success")
-                                                        | (
-                                                            log["status"] == "Completed"
-                                                        ),
+                                                        | (log["status"] == "Completed"),
                                                         "green",
                                                         "blue",
                                                     ),

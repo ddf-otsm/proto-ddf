@@ -81,11 +81,11 @@ Integration Points:
 
 Usage:
     import reflex as rx
-    
+
     # Create components
     def index() -> rx.Component:
         return rx.heading("Hello World")
-    
+
     # Create app
     app = rx.App()
     app.add_page(index)
@@ -158,12 +158,12 @@ config = rx.Config(
     - Logging prefixes
     - File naming
     - Build artifacts"""
-    
+
     app_module_import="proto_ddf_app.generator",
     """Python import path for the main application.
     Format: {package}.{module}
     Must match the actual file structure"""
-    
+
     # Network Configuration
     backend_host=BACKEND_HOST,
     """Backend server host binding.
@@ -171,13 +171,13 @@ config = rx.Config(
     - '0.0.0.0': Bind to all interfaces (recommended)
     - '127.0.0.1': Bind to localhost only
     - 'localhost': Bind to localhost only
-    
+
     Benefits of 0.0.0.0:
     - Accessible from network
     - Mobile device testing
     - Team collaboration
     - Production deployment"""
-    
+
     backend_port=BACKEND_PORT,
     """Backend API server port.
     Features:
@@ -185,10 +185,10 @@ config = rx.Config(
     - State management
     - API endpoints
     - Real-time updates
-    
+
     Range: 3000-5000 (configurable)
     Managed by: PortRegistry"""
-    
+
     frontend_port=FRONTEND_PORT,
     """Frontend development server port.
     Features:
@@ -196,10 +196,10 @@ config = rx.Config(
     - Hot reload
     - Development tools
     - Source maps
-    
+
     Range: 3000-5000 (configurable)
     Managed by: PortRegistry"""
-    
+
     # Development Settings
     loglevel=rx.constants.LogLevel.DEBUG,
     """Logging level for development.
@@ -209,22 +209,22 @@ config = rx.Config(
     - WARNING: Warning messages
     - ERROR: Error messages only
     - CRITICAL: Critical errors only
-    
+
     Development: DEBUG (recommended)
     Production: INFO or WARNING"""
-    
+
     env=rx.Env.DEV,
     """Application environment.
     Options:
     - DEV: Development mode
     - PROD: Production mode
-    
+
     Development features:
     - Hot reload
     - Debug tools
     - Source maps
     - Verbose logging"""
-    
+
     # Plugin Configuration
     plugins=[
         rx.plugins.SitemapPlugin(),
@@ -234,7 +234,7 @@ config = rx.Config(
         - SEO optimization
         - Search engine indexing
         - URL discovery"""
-        
+
         rx.plugins.TailwindV4Plugin(),
         """Enable Tailwind CSS v4 support.
         Features:
@@ -244,13 +244,13 @@ config = rx.Config(
         - Component styling"""
     ],
     """List of Reflex plugins to enable.
-    
+
     Available Plugins:
     - SitemapPlugin: SEO sitemap generation
     - TailwindV4Plugin: CSS framework support
     - AnalyticsPlugin: Usage analytics
     - PerformancePlugin: Performance monitoring
-    
+
     Plugin Benefits:
     - Extended functionality
     - Better SEO
@@ -272,7 +272,7 @@ config = rx.Config(
 
 ### Test Categories
 - **Unit Tests**: Individual component testing
-- **Integration Tests**: Workflow testing  
+- **Integration Tests**: Workflow testing
 - **E2E Tests**: Full user journey testing
 - **Performance Tests**: Load and stress testing
 
@@ -384,7 +384,7 @@ logger = logging.getLogger(__name__)
 class TestGeneratorHomePage:
     """
     Test suite for the generator home page functionality.
-    
+
     These tests validate:
     - Page loading and rendering
     - UI component visibility
@@ -392,50 +392,50 @@ class TestGeneratorHomePage:
     - Responsive design
     - Accessibility compliance
     """
-    
+
     def test_page_loads(self, page: Page, base_url: str):
         """
         Test that the generator home page loads successfully.
-        
+
         This test validates:
         - Page loads without errors
         - Main heading is visible
         - Navigation elements are present
         - No JavaScript errors
-        
+
         Args:
             page: Playwright page object
             base_url: Base URL for the application
         """
         page.goto(base_url)
-        
+
         # Wait for the page to load completely
         page.wait_for_load_state("networkidle")
-        
+
         # Check for main heading
         heading = page.locator("text=Proto-DDF Generator")
         expect(heading).to_be_visible(timeout=10000)
-        
+
         logger.info("✅ Generator home page loaded successfully")
-    
+
     def test_page_title(self, page: Page, base_url: str):
         """
         Test that the page has the correct title.
-        
+
         This test validates:
         - Page title is set correctly
         - Title appears in browser tab
         - SEO metadata is present
-        
+
         Args:
             page: Playwright page object
             base_url: Base URL for the application
         """
         page.goto(base_url)
-        
+
         # Check page title
         expect(page).to_have_title("Proto-DDF Generator")
-        
+
         logger.info("✅ Page title is correct")
 ```
 

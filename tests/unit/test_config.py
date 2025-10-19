@@ -51,16 +51,12 @@ class TestPortConfiguration(unittest.TestCase):
         self.assertGreaterEqual(
             GENERATED_FRONTEND_PORT, 3000, "Generated frontend port below minimum"
         )
-        self.assertLessEqual(
-            GENERATED_FRONTEND_PORT, 5000, "Generated frontend port above maximum"
-        )
+        self.assertLessEqual(GENERATED_FRONTEND_PORT, 5000, "Generated frontend port above maximum")
 
         self.assertGreaterEqual(
             GENERATED_BACKEND_PORT, 3000, "Generated backend port below minimum"
         )
-        self.assertLessEqual(
-            GENERATED_BACKEND_PORT, 5000, "Generated backend port above maximum"
-        )
+        self.assertLessEqual(GENERATED_BACKEND_PORT, 5000, "Generated backend port above maximum")
 
     def test_port_uniqueness(self):
         """Test that all assigned ports are unique."""
@@ -82,15 +78,11 @@ class TestPortConfiguration(unittest.TestCase):
         ]
         unique_ports = set(ports)
 
-        self.assertEqual(
-            len(ports), len(unique_ports), f"Port conflict detected: {ports}"
-        )
+        self.assertEqual(len(ports), len(unique_ports), f"Port conflict detected: {ports}")
 
     def test_port_persistence(self):
         """Test that ports are persisted to JSON file."""
-        config_file = (
-            Path(__file__).parent.parent.parent / "config" / ".port_config.json"
-        )
+        config_file = Path(__file__).parent.parent.parent / "config" / ".port_config.json"
 
         if config_file.exists():
             with open(config_file, "r") as f:
@@ -171,9 +163,7 @@ class TestApplicationConfiguration(unittest.TestCase):
         required_patterns = ["name", "email", "phone", "address", "id"]
 
         for pattern in required_patterns:
-            self.assertIn(
-                pattern, FIELD_MAPPING_PATTERNS, f"Missing field pattern: {pattern}"
-            )
+            self.assertIn(pattern, FIELD_MAPPING_PATTERNS, f"Missing field pattern: {pattern}")
             self.assertIsInstance(
                 FIELD_MAPPING_PATTERNS[pattern],
                 list,

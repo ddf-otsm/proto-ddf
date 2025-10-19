@@ -68,7 +68,7 @@ API_RESPONSE=$(curl -s "$JENKINS_URL/api/json" 2>/dev/null || echo "")
 
 if [ -n "$API_RESPONSE" ]; then
     echo -e "${GREEN}✅ Jenkins API is responding${NC}"
-    
+
     # Extract job list if available
     JOB_COUNT=$(echo "$API_RESPONSE" | grep -o '"name"' | wc -l 2>/dev/null || echo "0")
     echo -e "${BLUE}   Jobs in queue/running: $JOB_COUNT${NC}"
@@ -89,7 +89,7 @@ ${BLUE}Job Details:${NC}
   Jenkins URL:    $JENKINS_URL
   Pipeline File:  Jenkinsfile.e2e
   Repository:     /Users/luismartins/local_repos/proto-ddf
-  
+
 ${BLUE}Expected Stages:${NC}
   1️⃣  Setup           - Environment preparation (5-10 min)
   2️⃣  Start Generator - Launch Proto-DDF server (2-3 min)
@@ -115,7 +115,7 @@ ${GREEN}Method 1: Via Jenkins CLI${NC}
   Prerequisites:
     - Download jenkins-cli.jar from: $JENKINS_URL/jnlpJars/jenkins-cli.jar
     - (Already available in repo as jenkins-cli.jar)
-  
+
   Command:
     java -jar jenkins-cli.jar -s $JENKINS_URL build $JOB_NAME -s
 
@@ -127,7 +127,7 @@ ${GREEN}Method 2: Via Browser UI${NC}
 ${GREEN}Method 3: Via Webhook/API${NC}
   Endpoint: $JENKINS_URL/job/$JOB_NAME/build
   Method: POST
-  Headers: 
+  Headers:
     - Crumb: (get from $JENKINS_URL/crumbIssuer/api/json)
     - Content-Type: application/x-www-form-urlencoded
 

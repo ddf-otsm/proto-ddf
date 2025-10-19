@@ -19,13 +19,13 @@ async def generate_app(self):
     self.generation_step = "Validating project settings..."
     yield
     await asyncio.sleep(0.5)
-    
+
     # Step 2: Create structure (25%)
     self.generation_progress = 25
     self.generation_step = "Creating project structure..."
     yield
     await asyncio.sleep(0.5)
-    
+
     # ... 6 more steps up to 100%
 ```
 
@@ -114,7 +114,7 @@ class GeneratorState(rx.State):
     project_name: str = ""
     project_description: str = ""
     generated_apps: List[Dict] = []
-    
+
     # New for progress tracking
     generation_status: str = "idle"      # idle|generating|success|error
     generation_progress: int = 0         # 0-100
@@ -256,7 +256,7 @@ Description:  [_______________]
 
 [Generate App]
 
-✓ Successfully generated my news website! 
+✓ Successfully generated my news website!
   Run it with: cd generated/my_news_website && ./run.sh
 ```
 
@@ -333,9 +333,3 @@ The Proto-DDF generator now provides a **professional, modern user experience** 
 **Status:** ✅ Ready for Playwright test implementation
 
 **Application:** 🚀 Running at http://127.0.0.1:4936
-
-
-
-
-
-

@@ -90,36 +90,36 @@ import reflex as rx
 class State(rx.State):
     """
     Application state for My News Website.
-    
+
     Manages the application's reactive state including:
     - User interface state
     - Data loading state
     - User preferences
     - Navigation state
-    
+
     Attributes:
         message: Welcome message displayed to users
         loading: Whether data is currently loading
         theme: Current color theme (light/dark)
     """
-    
+
     # Core application state
     message: str = "Hello from my news website!"
     """Welcome message displayed on the homepage."""
-    
+
     loading: bool = False
     """Whether the application is currently loading data."""
-    
+
     theme: str = "light"
     """Current color theme (light or dark)."""
 
     def toggle_theme(self):
         """
         Toggle between light and dark themes.
-        
+
         This method updates the application's color theme
         and triggers a UI re-render with the new theme.
-        
+
         Example:
             >>> state = State()
             >>> state.theme
@@ -133,10 +133,10 @@ class State(rx.State):
     def update_message(self, new_message: str):
         """
         Update the welcome message.
-        
+
         Args:
             new_message: The new message to display
-            
+
         Example:
             >>> state = State()
             >>> state.update_message("Welcome to the news!")
@@ -149,19 +149,19 @@ class State(rx.State):
 def index() -> rx.Component:
     """
     Main homepage component.
-    
+
     This component renders the primary interface of the news website,
     including the header, navigation, and main content area.
-    
+
     Returns:
         rx.Component: The main page component
-        
+
     Features:
         - Responsive design
         - Color mode toggle
         - Gradient headings
         - Card-based layout
-        
+
     Customization:
         - Modify the heading text
         - Add new sections
@@ -171,19 +171,19 @@ def index() -> rx.Component:
     return rx.container(
         # Color mode toggle button
         rx.color_mode.button(position="top-right"),
-        
+
         # Main content stack
         rx.vstack(
             # Page heading with gradient
             rx.heading("my news website", size="9", gradient=True),
-            
+
             # Subtitle
             rx.text(
                 "a website like bloomberg",
                 size="4",
                 color="gray",
             ),
-            
+
             # Getting started card
             rx.card(
                 rx.vstack(
@@ -258,11 +258,11 @@ config = rx.Config(
     - Module imports
     - File naming
     - Logging identification"""
-    
+
     app_module_import="my_news_website_app.my_news_website",
     """Python import path for the main application module.
     Format: {app_name}.{main_file_name}"""
-    
+
     # Network Configuration
     backend_port=4392,
     """Backend API server port.
@@ -270,23 +270,23 @@ config = rx.Config(
     - Serves API endpoints
     - Manages state synchronization
     - Range: 3000-5000 (configurable)"""
-    
+
     frontend_port=4393,
     """Frontend development server port.
     - Serves the React UI
     - Hot reload support
     - Development tools
     - Range: 3000-5000 (configurable)"""
-    
+
     # Development Settings
     loglevel=rx.constants.LogLevel.INFO,
     """Logging level for the application.
     Options: DEBUG, INFO, WARNING, ERROR, CRITICAL"""
-    
+
     env=rx.Env.DEV,
     """Application environment.
     Options: DEV (development), PROD (production)"""
-    
+
     # Optional Plugins
     plugins=[
         # Add plugins here for extended functionality

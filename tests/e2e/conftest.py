@@ -60,9 +60,7 @@ def browser_context_args(browser_context_args):
 
 
 @pytest.fixture(scope="function")
-def context(
-    browser: Browser, browser_context_args: dict
-) -> Generator[BrowserContext, None, None]:
+def context(browser: Browser, browser_context_args: dict) -> Generator[BrowserContext, None, None]:
     """Create a new browser context for each test."""
     context = browser.new_context(**browser_context_args)
     yield context

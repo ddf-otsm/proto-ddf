@@ -31,10 +31,11 @@ from pathlib import Path
 from typing import Dict, List
 
 import reflex as rx
+from config.constants import BACKEND_PORT as GEN_BACKEND_PORT
+from config.constants import FRONTEND_PORT as GEN_FRONTEND_PORT
 
 # Centralized port registry for stable, collision-free assignments
 from config.port_registry import PortRegistry
-from config.constants import BACKEND_PORT as GEN_BACKEND_PORT, FRONTEND_PORT as GEN_FRONTEND_PORT
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -59,26 +60,25 @@ Ensures consistent port assignment across app restarts and prevents collisions.
 PORT_REGISTRY = PortRegistry()
 
 
-
 def is_port_available(port: int) -> bool:
     """
     Check if a port is available for binding.
-    
+
     This function tests port availability by attempting to bind to it
     on all interfaces (0.0.0.0). Used during port allocation to prevent conflicts.
-    
+
     Args:
         port: Port number to check (typically in range 3000-5000)
-        
+
     Returns:
         bool: True if port is available, False if already in use
-        
+
     Example:
         >>> is_port_available(3000)
         True
         >>> is_port_available(80)  # Likely in use
         False
-        
+
     Note:
         This function only checks availability at the moment of the call.
         Port availability can change immediately after checking.
@@ -94,17 +94,17 @@ def is_port_available(port: int) -> bool:
 def find_available_port(start: int = 3000, end: int = 5000) -> int:
     """
     Find an available port in the specified range using random selection.
-    
+
     Attempts to find an available port by testing random ports in the range.
     Uses up to 100 attempts before falling back to the start port.
-    
+
     Args:
         start: Starting port number (inclusive, default: 3000)
         end: Ending port number (inclusive, default: 5000)
-        
+
     Returns:
         int: Available port number, or start port if none found after 100 attempts
-        
+
     Example:
         >>> port = find_available_port()
         >>> 3000 <= port <= 5000
@@ -112,7 +112,7 @@ def find_available_port(start: int = 3000, end: int = 5000) -> int:
         >>> port = find_available_port(8000, 9000)
         >>> 8000 <= port <= 9000
         True
-        
+
     Note:
         This function uses random selection to reduce collision probability
         in concurrent scenarios. For deterministic allocation, use PortRegistry.
@@ -127,10 +127,10 @@ def find_available_port(start: int = 3000, end: int = 5000) -> int:
 def load_generated_apps() -> List[Dict]:
     """
     Load all generated Reflex applications from the generated/ directory.
-    
+
     Scans the generated/ directory for valid Reflex applications, extracts
     their configuration, and returns metadata for each application.
-    
+
     Returns:
         List[Dict]: List of dictionaries containing app metadata:
             - name: Display name of the application
@@ -139,66 +139,72 @@ def load_generated_apps() -> List[Dict]:
             - status: Current status ("ready", "running", etc.)
             - port: Frontend port number
             - url: Application URL
-            
+
     Example:
         >>> apps = load_generated_apps()
         >>> len(apps)
         3
         >>> apps[0]['name']
         'My News Website'
-        
+
     Note:
         This function automatically syncs port assignments with the PortRegistry
         to ensure consistency across restarts and prevent collisions.
     """
     generated_dir = Path("generated")
     apps = []
-    
+
     if not generated_dir.exists():
-        logger.warning("Generated directory does not exist", extra={
-            "operation": "load_generated_apps",
-            "directory": str(generated_dir),
-            "reason": "directory_not_found"
-        })
+        logger.warning(
+            "Generated directory does not exist",
+            extra={
+                "operation": "load_generated_apps",
+                "directory": str(generated_dir),
+                "reason": "directory_not_found",
+            },
+        )
         return apps
-    
+
     for app_dir in generated_dir.iterdir():
-        if not app_dir.is_dir() or app_dir.name.startswith('.'):
+        if not app_dir.is_dir() or app_dir.name.startswith("."):
             continue
-            
+
         # Skip if no rxconfig.py (not a valid app)
         rxconfig_path = app_dir / "rxconfig.py"
         if not rxconfig_path.exists():
             continue
-        
+
         # Try to read the rxconfig to get port info
         frontend_port = None
         backend_port = None
         try:
             rxconfig_content = rxconfig_path.read_text()
             # Extract frontend_port from config
-            for line in rxconfig_content.split('\n'):
-                if 'backend_port' in line and '=' in line and backend_port is None:
+            for line in rxconfig_content.split("\n"):
+                if "backend_port" in line and "=" in line and backend_port is None:
                     try:
-                        port_str = line.split('=')[-1].strip().rstrip(',')
+                        port_str = line.split("=")[-1].strip().rstrip(",")
                         backend_port = int(port_str)
                     except Exception:
                         pass
-                if 'frontend_port' in line and '=' in line and frontend_port is None:
+                if "frontend_port" in line and "=" in line and frontend_port is None:
                     try:
-                        port_str = line.split('=')[-1].strip().rstrip(',')
+                        port_str = line.split("=")[-1].strip().rstrip(",")
                         frontend_port = int(port_str)
                     except Exception:
                         pass
         except Exception as e:
-            logger.warning("Could not read port configuration from rxconfig", extra={
-                "operation": "load_generated_apps",
-                "app_name": app_dir.name,
-                "rxconfig_path": str(rxconfig_path),
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            })
-        
+            logger.warning(
+                "Could not read port configuration from rxconfig",
+                extra={
+                    "operation": "load_generated_apps",
+                    "app_name": app_dir.name,
+                    "rxconfig_path": str(rxconfig_path),
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                },
+            )
+
         # Try to read description from main app file
         description = "A Reflex application"
         app_name = app_dir.name
@@ -211,21 +217,24 @@ def load_generated_apps() -> List[Dict]:
                     parts = content.split('"""')
                     if len(parts) >= 3:
                         doc = parts[1].strip()
-                        lines = doc.split('\n')
+                        lines = doc.split("\n")
                         if len(lines) > 2:
                             description = lines[2].strip()
             except Exception as e:
-                logger.warning("Could not read description from app file", extra={
-                    "operation": "load_generated_apps",
-                    "app_name": app_name,
-                    "app_file_path": str(main_app_file),
-                    "error_type": type(e).__name__,
-                    "error_message": str(e)
-                })
-        
+                logger.warning(
+                    "Could not read description from app file",
+                    extra={
+                        "operation": "load_generated_apps",
+                        "app_name": app_name,
+                        "app_file_path": str(main_app_file),
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    },
+                )
+
         # Format name from directory name
-        display_name = app_name.replace('_', ' ').title()
-        
+        display_name = app_name.replace("_", " ").title()
+
         # Ensure registry has stable, non-colliding ports; update rxconfig if needed
         ports = PORT_REGISTRY.ensure_ports(app_name, backend=backend_port, frontend=frontend_port)
 
@@ -238,15 +247,15 @@ def load_generated_apps() -> List[Dict]:
                 rx_text = None
             if rx_text is not None:
                 new_text_lines = []
-                for line in rx_text.split('\n'):
-                    if 'backend_port' in line and '=' in line:
-                        prefix = line.split('=')[0]
+                for line in rx_text.split("\n"):
+                    if "backend_port" in line and "=" in line:
+                        prefix = line.split("=")[0]
                         new_line = f"{prefix}= {ports.backend},"
                         if new_line != line:
                             needs_write = True
                         new_text_lines.append(new_line)
-                    elif 'frontend_port' in line and '=' in line:
-                        prefix = line.split('=')[0]
+                    elif "frontend_port" in line and "=" in line:
+                        prefix = line.split("=")[0]
                         new_line = f"{prefix}= {ports.frontend},"
                         if new_line != line:
                             needs_write = True
@@ -254,15 +263,18 @@ def load_generated_apps() -> List[Dict]:
                     else:
                         new_text_lines.append(line)
                 if needs_write:
-                    rxconfig_path.write_text('\n'.join(new_text_lines))
+                    rxconfig_path.write_text("\n".join(new_text_lines))
         except Exception as e:
-            logger.warning("Could not sync rxconfig ports", extra={
-                "operation": "load_generated_apps",
-                "app_name": app_name,
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "ports": {"backend": ports.backend, "frontend": ports.frontend}
-            })
+            logger.warning(
+                "Could not sync rxconfig ports",
+                extra={
+                    "operation": "load_generated_apps",
+                    "app_name": app_name,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "ports": {"backend": ports.backend, "frontend": ports.frontend},
+                },
+            )
 
         app_info = {
             "name": display_name,
@@ -273,36 +285,42 @@ def load_generated_apps() -> List[Dict]:
             "url": f"http://127.0.0.1:{ports.frontend}",
         }
         apps.append(app_info)
-        logger.info("Application loaded successfully", extra={
+        logger.info(
+            "Application loaded successfully",
+            extra={
+                "operation": "load_generated_apps",
+                "app_name": display_name,
+                "app_path": f"generated/{app_name}",
+                "ports": {"backend": ports.backend, "frontend": ports.frontend},
+                "url": f"http://127.0.0.1:{ports.frontend}",
+            },
+        )
+
+    logger.info(
+        "All generated apps loaded",
+        extra={
             "operation": "load_generated_apps",
-            "app_name": display_name,
-            "app_path": f"generated/{app_name}",
-            "ports": {"backend": ports.backend, "frontend": ports.frontend},
-            "url": f"http://127.0.0.1:{ports.frontend}"
-        })
-    
-    logger.info("All generated apps loaded", extra={
-        "operation": "load_generated_apps",
-        "total_apps": len(apps),
-        "app_names": [app["name"] for app in apps]
-    })
+            "total_apps": len(apps),
+            "app_names": [app["name"] for app in apps],
+        },
+    )
     return apps
 
 
 class GeneratorState(rx.State):
     """
     State management for the Proto-DDF generator interface.
-    
+
     This class manages the complete state of the application generator,
     including project settings, generated applications tracking, health
     monitoring, and generation workflow state.
-    
+
     State Categories:
         - Project Settings: User input for new application generation
         - Generated Apps: List of created applications with metadata
         - Health Tracking: Real-time monitoring of application status
         - Generation Status: Workflow progress and error handling
-    
+
     Attributes:
         project_name: Name of the project being generated
         project_description: Optional description of the project
@@ -316,14 +334,14 @@ class GeneratorState(rx.State):
         generation_progress: Progress percentage (0-100)
         generation_step: Current step description in generation workflow
         generated_app_url: URL of the newly generated application
-    
+
     Example:
         >>> state = GeneratorState()
         >>> state.project_name = "My App"
         >>> await state.generate_app()
         >>> state.generation_status
         'success'
-    
+
     Note:
         This class uses Reflex's reactive state management,
         so all attribute changes trigger UI updates automatically.
@@ -331,26 +349,26 @@ class GeneratorState(rx.State):
 
     # === Project Settings ===
     # User input for new application generation
-    
+
     project_name: str = ""
     """Name of the project to generate (required).
-    
+
     Will be converted to snake_case for directory and module names.
     Example: "My News Website" -> "my_news_website"
     """
-    
+
     project_description: str = ""
     """Optional description of the project.
-    
+
     Used in generated app documentation and UI.
     """
 
     # === Generated Apps ===
     # Dynamically loaded from file system
-    
+
     generated_apps: List[Dict] = []
     """List of generated applications with metadata.
-    
+
     Each entry contains:
         - name: Display name
         - description: App description
@@ -362,88 +380,91 @@ class GeneratorState(rx.State):
 
     # === Health Tracking ===
     # Real-time monitoring of application status
-    
+
     app_health: Dict[str, str] = {}
     """Health status mapping for each application.
-    
+
     Keys: Application names
     Values: Status strings ("running", "stopped", "error", etc.)
     """
-    
+
     running_count: int = 0
     """Number of currently running applications.
-    
+
     Used for dashboard statistics and resource monitoring.
     """
-    
+
     last_action_message: str = ""
     """User feedback message for the last action performed.
-    
+
     Displayed temporarily in the UI after actions like start/stop/restart.
     """
-    
+
     health_poll_enabled: bool = True
     """Flag to enable or disable automatic health polling.
-    
+
     When enabled, background task checks app health periodically.
     """
 
     # === Generation Status ===
     # Workflow progress and error handling
-    
+
     generation_status: str = "idle"
     """Current status of the generation workflow.
-    
+
     Valid states: "idle", "generating", "success", "error"
     Controls UI state and user interaction availability.
     """
-    
+
     generation_message: str = ""
     """Status or error message for generation workflow.
-    
+
     Provides user feedback about success or failure reasons.
     """
-    
+
     generation_progress: int = 0
     """Progress percentage for generation workflow (0-100).
-    
+
     Used for progress bar visualization during app generation.
     """
-    
+
     generation_step: str = ""
     """Current step description in generation workflow.
-    
+
     Provides detailed feedback about what's happening.
     Example: "Creating project structure...", "Installing dependencies..."
     """
-    
+
     generated_app_url: str = ""
     """URL of the newly generated application.
-    
+
     Populated after successful generation for quick access.
     """
 
     def on_load(self) -> None:
         """
         Initialize generator state when the page loads.
-        
+
         Loads all generated applications from disk and performs an initial
         health check to determine which applications are running.
-        
+
         This method is automatically called by Reflex when the page is loaded
         or refreshed by the user.
-        
+
         Side Effects:
             - Populates self.generated_apps with app metadata
             - Updates self.app_health with current status
             - Updates self.running_count
         """
         self.generated_apps = load_generated_apps()
-        logger.info("Generator state initialized", extra={
-            "operation": "on_load",
-            "total_apps": len(self.generated_apps),
-            "app_names": [app["name"] for app in self.generated_apps]
-        })
+        logger.info(
+            "Generator state initialized",
+            extra={
+                "operation": "on_load",
+                "total_apps": len(self.generated_apps),
+                "app_names": [app["name"] for app in self.generated_apps],
+            },
+        )
         # Initial health snapshot
         self.refresh_health()
 
@@ -451,7 +472,7 @@ class GeneratorState(rx.State):
         """Background task for periodic health checks with exponential backoff."""
         backoff = 5  # Start at 5 seconds
         max_backoff = 60  # Cap at 60 seconds
-        
+
         while self.health_poll_enabled:
             try:
                 await asyncio.sleep(backoff)
@@ -466,41 +487,44 @@ class GeneratorState(rx.State):
     async def generate_app(self) -> None:
         """
         Generate a new Reflex application with progress tracking.
-        
+
         Creates a complete Reflex application from scratch including:
         - Project directory structure
         - Main application module with basic UI
         - Configuration files (rxconfig.py, requirements.txt)
         - Run scripts for easy startup
         - Git ignore file
-        
+
         The generation process is tracked with progress updates that are
         yielded to the UI for real-time feedback.
-        
+
         Raises:
             Exceptions are caught and logged, with user-friendly messages
             set in self.generation_message.
-            
+
         Side Effects:
             - Creates new directory in generated/
             - Allocates ports via PortRegistry
             - Updates self.generated_apps list
             - Updates generation status and progress attributes
         """
-        logger.info("Application generation started", extra={
-            "operation": "generate_app",
-            "project_name": self.project_name,
-            "project_description": self.project_description,
-            "user_id": getattr(self, 'user_id', 'anonymous')
-        })
+        logger.info(
+            "Application generation started",
+            extra={
+                "operation": "generate_app",
+                "project_name": self.project_name,
+                "project_description": self.project_description,
+                "user_id": getattr(self, "user_id", "anonymous"),
+            },
+        )
 
         if not self.project_name:
             self.generation_message = "Please provide a project name"
             self.generation_status = "error"
-            logger.warning("Application generation failed - no project name provided", extra={
-                "operation": "generate_app",
-                "failure_reason": "missing_project_name"
-            })
+            logger.warning(
+                "Application generation failed - no project name provided",
+                extra={"operation": "generate_app", "failure_reason": "missing_project_name"},
+            )
             return
 
         # Reset state
@@ -527,12 +551,15 @@ class GeneratorState(rx.State):
             if app_dir.exists():
                 self.generation_status = "error"
                 self.generation_message = f"App '{app_name}' already exists!"
-                logger.error("Application generation failed - directory already exists", extra={
-                    "operation": "generate_app",
-                    "app_name": app_name,
-                    "app_dir": str(app_dir),
-                    "failure_reason": "directory_exists"
-                })
+                logger.error(
+                    "Application generation failed - directory already exists",
+                    extra={
+                        "operation": "generate_app",
+                        "app_name": app_name,
+                        "app_dir": str(app_dir),
+                        "failure_reason": "directory_exists",
+                    },
+                )
                 return
 
             # Step 2: Create structure
@@ -541,24 +568,30 @@ class GeneratorState(rx.State):
             yield
             await asyncio.sleep(0.5)
 
-            logger.info("Creating application directory structure", extra={
-                "operation": "generate_app",
-                "app_name": app_name,
-                "app_dir": str(app_dir),
-                "step": "create_structure"
-            })
+            logger.info(
+                "Creating application directory structure",
+                extra={
+                    "operation": "generate_app",
+                    "app_name": app_name,
+                    "app_dir": str(app_dir),
+                    "step": "create_structure",
+                },
+            )
             app_dir.mkdir(parents=True, exist_ok=True)
             app_module_dir = app_dir / f"{app_name}_app"
             app_module_dir.mkdir(exist_ok=True)
 
             # Allocate stable, collision-free ports from registry
             backend_port, frontend_port = PORT_REGISTRY.reserve_pair(app_name)
-            logger.info("Ports allocated for application", extra={
-                "operation": "generate_app",
-                "app_name": app_name,
-                "ports": {"backend": backend_port, "frontend": frontend_port},
-                "step": "port_allocation"
-            })
+            logger.info(
+                "Ports allocated for application",
+                extra={
+                    "operation": "generate_app",
+                    "app_name": app_name,
+                    "ports": {"backend": backend_port, "frontend": frontend_port},
+                    "step": "port_allocation",
+                },
+            )
 
             # Step 3: Generate code
             self.generation_progress = 40
@@ -613,12 +646,12 @@ import reflex as rx
 class State(rx.State):
     """
     Application state for {self.project_name}.
-    
+
     Manages reactive state including:
     - UI state (message, etc.)
     - User data
     - Application data
-    
+
     All state changes automatically trigger UI updates.
     """
 
@@ -629,7 +662,7 @@ class State(rx.State):
 def index() -> rx.Component:
     """
     Main page component for {self.project_name}.
-    
+
     Returns:
         rx.Component: The main page with heading, description, and card.
     """
@@ -724,16 +757,16 @@ config = rx.Config(
     - Logging identification
     Format: lowercase_with_underscores
     """,
-    
+
     app_module_import="{app_name}_app.{app_name}",
     """Python import path for the main application module.
     Format: package.module (matches directory structure)
     Must match the location of the main application file.
     """,
-    
+
     # === Network Configuration ===
     # Ports are automatically allocated by Proto-DDF
-    
+
     backend_port={backend_port},
     """Backend API server port.
     - Handles WebSocket connections for real-time updates
@@ -741,7 +774,7 @@ config = rx.Config(
     - Manages state synchronization
     - Accessible at: http://localhost:{backend_port}
     """,
-    
+
     frontend_port={frontend_port},
     """Frontend development server port.
     - Serves the React user interface
@@ -1015,41 +1048,50 @@ __pycache__/
             self.generation_status = "success"
             self.generated_app_url = app_url
             self.generation_message = f"🎉 Successfully generated {self.project_name}!"
-            logger.info("Application generation completed successfully", extra={
-                "operation": "generate_app",
-                "app_name": app_name,
-                "app_dir": str(app_dir),
-                "ports": {"backend": backend_port, "frontend": frontend_port},
-                "url": app_url,
-                "project_description": self.project_description,
-                "duration_seconds": time.time() - start_time if 'start_time' in locals() else None
-            })
+            logger.info(
+                "Application generation completed successfully",
+                extra={
+                    "operation": "generate_app",
+                    "app_name": app_name,
+                    "app_dir": str(app_dir),
+                    "ports": {"backend": backend_port, "frontend": frontend_port},
+                    "url": app_url,
+                    "project_description": self.project_description,
+                    "duration_seconds": (
+                        time.time() - start_time if "start_time" in locals() else None
+                    ),
+                },
+            )
 
         except Exception as e:
             self.generation_status = "error"
             self.generation_message = f"⚠️ Error generating app: {str(e)}"
             self.generation_progress = 0
             self.generation_step = ""
-            logger.error("Application generation failed with exception", extra={
-                "operation": "generate_app",
-                "app_name": self.project_name,
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "generation_step": self.generation_step,
-                "generation_progress": self.generation_progress
-            }, exc_info=True)
+            logger.error(
+                "Application generation failed with exception",
+                extra={
+                    "operation": "generate_app",
+                    "app_name": self.project_name,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "generation_step": self.generation_step,
+                    "generation_progress": self.generation_progress,
+                },
+                exc_info=True,
+            )
 
     def _is_port_open(self, host: str, port: int) -> bool:
         """
         Check if a TCP port is open and accepting connections.
-        
+
         Args:
             host: Hostname or IP address to check
             port: Port number to check
-            
+
         Returns:
             bool: True if port is open, False otherwise
-            
+
         Note:
             Uses a 1-second timeout to avoid blocking on unresponsive ports.
         """
@@ -1062,14 +1104,14 @@ __pycache__/
     def refresh_health(self) -> None:
         """
         Update health status for all generated applications.
-        
+
         Checks each application's frontend port to determine if it's running.
         Updates the app_health dictionary and running_count attribute.
-        
+
         Side Effects:
             - Updates self.app_health with current status for each app
             - Updates self.running_count with number of running apps
-            
+
         Note:
             This method is called periodically by the background health poll
             and can be manually triggered via the UI.
@@ -1085,32 +1127,35 @@ __pycache__/
                 running += 1
         self.app_health = health
         self.running_count = running
-        logger.debug("Health check completed", extra={
-            "operation": "refresh_health",
-            "total_apps": len(self.generated_apps),
-            "running_apps": running,
-            "health_status": health
-        })
+        logger.debug(
+            "Health check completed",
+            extra={
+                "operation": "refresh_health",
+                "total_apps": len(self.generated_apps),
+                "running_apps": running,
+                "health_status": health,
+            },
+        )
 
     async def open_app(self, name: str, path: str, port: int, url: str):
         """
         Open a generated application with automatic startup if needed.
-        
+
         If the application is not running, this method will automatically
         start it and wait for it to become available before redirecting.
-        
+
         Args:
             name: Display name of the application
             path: Relative path to the application directory
             port: Frontend port number
             url: Application URL to redirect to
-            
+
         Side Effects:
             - May start the application in a background process
             - Updates self.last_action_message with status updates
             - Refreshes health status
             - Redirects browser to the application URL
-            
+
         Note:
             This method yields progress updates for UI reactivity.
             Waits up to 30 seconds for the application to start.
@@ -1122,13 +1167,16 @@ __pycache__/
         if not self._is_port_open("127.0.0.1", int(port)):
             self.last_action_message = f"Starting {name}..."
             yield
-            logger.info("Auto-starting application", extra={
-                "operation": "open_app",
-                "app_name": name,
-                "app_path": path,
-                "port": port,
-                "url": url
-            })
+            logger.info(
+                "Auto-starting application",
+                extra={
+                    "operation": "open_app",
+                    "app_name": name,
+                    "app_path": path,
+                    "port": port,
+                    "url": url,
+                },
+            )
             try:
                 run_script = Path(path) / "run.sh"
                 if run_script.exists():
@@ -1138,37 +1186,47 @@ __pycache__/
                         cwd=str(Path(path)),
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        start_new_session=True
+                        start_new_session=True,
                     )
-                    logger.info("Application process started", extra={
-                        "operation": "open_app",
-                        "app_name": name,
-                        "pid": process.pid,
-                        "port": port
-                    })
+                    logger.info(
+                        "Application process started",
+                        extra={
+                            "operation": "open_app",
+                            "app_name": name,
+                            "pid": process.pid,
+                            "port": port,
+                        },
+                    )
                     # Record PID in registry
                     app_name_key = Path(path).name
                     PORT_REGISTRY.set_pid(app_name_key, process.pid)
                 else:
-                    logger.warning("Run script not found", extra={
-                        "operation": "open_app",
-                        "app_name": name,
-                        "app_path": path,
-                        "run_script_path": str(run_script),
-                        "failure_reason": "run_script_not_found"
-                    })
+                    logger.warning(
+                        "Run script not found",
+                        extra={
+                            "operation": "open_app",
+                            "app_name": name,
+                            "app_path": path,
+                            "run_script_path": str(run_script),
+                            "failure_reason": "run_script_not_found",
+                        },
+                    )
                     self.last_action_message = f"⚠️ Error: run.sh not found for {name}"
                     yield
                     return
             except Exception as e:
-                logger.error("Failed to start application", extra={
-                    "operation": "open_app",
-                    "app_name": name,
-                    "app_path": path,
-                    "port": port,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e)
-                }, exc_info=True)
+                logger.error(
+                    "Failed to start application",
+                    extra={
+                        "operation": "open_app",
+                        "app_name": name,
+                        "app_path": path,
+                        "port": port,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    },
+                    exc_info=True,
+                )
                 self.last_action_message = f"⚠️ Failed to start {name}: {str(e)}"
                 yield
                 return
@@ -1178,23 +1236,29 @@ __pycache__/
             while time.time() - wait_start < 30:
                 if self._is_port_open("127.0.0.1", int(port)):
                     startup_duration = time.time() - start_time
-                    logger.info("Application started successfully", extra={
-                        "operation": "open_app",
-                        "app_name": name,
-                        "startup_duration_seconds": round(startup_duration, 1),
-                        "port": port
-                    })
+                    logger.info(
+                        "Application started successfully",
+                        extra={
+                            "operation": "open_app",
+                            "app_name": name,
+                            "startup_duration_seconds": round(startup_duration, 1),
+                            "port": port,
+                        },
+                    )
                     break
                 await asyncio.sleep(1.0)
                 yield
             else:
-                logger.warning("Application startup timeout", extra={
-                    "operation": "open_app",
-                    "app_name": name,
-                    "port": port,
-                    "timeout_seconds": 30,
-                    "failure_reason": "startup_timeout"
-                })
+                logger.warning(
+                    "Application startup timeout",
+                    extra={
+                        "operation": "open_app",
+                        "app_name": name,
+                        "port": port,
+                        "timeout_seconds": 30,
+                        "failure_reason": "startup_timeout",
+                    },
+                )
                 self.last_action_message = f"⚠️ Timeout: {name} did not start in 30s"
                 yield
                 return
@@ -1208,7 +1272,7 @@ __pycache__/
         """Open the newly generated app with auto-start support."""
         if not self.generated_app_url:
             return
-        
+
         # Find the newly generated app from the list
         if self.generated_apps:
             last_app = self.generated_apps[-1]
@@ -1216,13 +1280,13 @@ __pycache__/
                 last_app.get("name", ""),
                 last_app.get("path", ""),
                 last_app.get("port", 0),
-                last_app.get("url", self.generated_app_url)
+                last_app.get("url", self.generated_app_url),
             )
 
     def set_project_name(self, name: str) -> None:
         """
         Set the project name for the new application.
-        
+
         Args:
             name: Project name (will be converted to snake_case for filesystem)
         """
@@ -1231,7 +1295,7 @@ __pycache__/
     def set_project_description(self, description: str) -> None:
         """
         Set the project description for the new application.
-        
+
         Args:
             description: Optional description shown in the generated app
         """
@@ -1240,41 +1304,43 @@ __pycache__/
     async def stop_app(self, name: str, path: str):
         """
         Stop a running application.
-        
+
         Args:
             name: Display name of the application
             path: Relative path to the application directory
-            
+
         Side Effects:
             - Stops the application process via PortRegistry
             - Updates self.last_action_message with status
             - Refreshes health status after stopping
-            
+
         Note:
             This method yields progress updates for UI reactivity.
         """
         self.last_action_message = f"Stopping {name}..."
         yield
-        
+
         app_name_key = Path(path).name
         success = PORT_REGISTRY.stop_app(app_name_key)
-        
+
         if success:
-            logger.info("Application stopped successfully", extra={
-                "operation": "stop_app",
-                "app_name": name,
-                "app_path": path
-            })
+            logger.info(
+                "Application stopped successfully",
+                extra={"operation": "stop_app", "app_name": name, "app_path": path},
+            )
             self.last_action_message = f"✅ Stopped {name}"
         else:
-            logger.warning("Failed to stop application", extra={
-                "operation": "stop_app",
-                "app_name": name,
-                "app_path": path,
-                "failure_reason": "not_running_or_error"
-            })
+            logger.warning(
+                "Failed to stop application",
+                extra={
+                    "operation": "stop_app",
+                    "app_name": name,
+                    "app_path": path,
+                    "failure_reason": "not_running_or_error",
+                },
+            )
             self.last_action_message = f"⚠️ Could not stop {name}"
-        
+
         # Refresh health
         await asyncio.sleep(1.0)
         self.refresh_health()
@@ -1284,40 +1350,38 @@ __pycache__/
     async def restart_app(self, name: str, path: str, port: int, url: str):
         """
         Restart a running application.
-        
+
         Stops the application and then starts it again. Useful for applying
         configuration changes or recovering from errors.
-        
+
         Args:
             name: Display name of the application
             path: Relative path to the application directory
             port: Frontend port number
             url: Application URL
-            
+
         Side Effects:
             - Stops the application process
             - Starts the application process
             - Updates self.last_action_message with status
-            
+
         Note:
             This method yields progress updates for UI reactivity.
             Waits 2 seconds between stop and start.
         """
         self.last_action_message = f"Restarting {name}..."
         yield
-        
-        logger.info("Restarting application", extra={
-            "operation": "restart_app",
-            "app_name": name,
-            "app_path": path,
-            "port": port
-        })
-        
+
+        logger.info(
+            "Restarting application",
+            extra={"operation": "restart_app", "app_name": name, "app_path": path, "port": port},
+        )
+
         # Stop first
         app_name_key = Path(path).name
         PORT_REGISTRY.stop_app(app_name_key)
         await asyncio.sleep(2.0)
-        
+
         # Then start
         await self.open_app(name, path, port, url)
 
@@ -1362,7 +1426,7 @@ def app_card(app: Dict) -> rx.Component:
                         app.get("name", ""),
                         app.get("path", ""),
                         app.get("port", 0),
-                        app.get("url", f"http://127.0.0.1:{app['port']}")
+                        app.get("url", f"http://127.0.0.1:{app['port']}"),
                     ),
                     variant="soft",
                     size="2",
@@ -1378,7 +1442,7 @@ def app_card(app: Dict) -> rx.Component:
                         app.get("name", ""),
                         app.get("path", ""),
                         app.get("port", 0),
-                        app.get("url", f"http://127.0.0.1:{app['port']}")
+                        app.get("url", f"http://127.0.0.1:{app['port']}"),
                     ),
                     variant="outline",
                     size="2",
@@ -1392,8 +1456,7 @@ def app_card(app: Dict) -> rx.Component:
                         spacing="1",
                     ),
                     on_click=lambda: GeneratorState.stop_app(
-                        app.get("name", ""),
-                        app.get("path", "")
+                        app.get("name", ""), app.get("path", "")
                     ),
                     variant="outline",
                     size="2",
@@ -1433,8 +1496,8 @@ def index() -> rx.Component:
             # Ports & Health Dashboard
             rx.card(
                 rx.vstack(
-                rx.hstack(
-                    rx.vstack(
+                    rx.hstack(
+                        rx.vstack(
                             rx.text("🧭", size="7"),
                             rx.text("Generator Ports", size="2", color="gray"),
                             rx.text(
@@ -1446,12 +1509,12 @@ def index() -> rx.Component:
                         ),
                         rx.vstack(
                             rx.text("📦", size="7"),
-                        rx.text("Generated Apps", size="2", color="gray"),
-                        rx.text(
-                            GeneratorState.generated_apps.length(),
+                            rx.text("Generated Apps", size="2", color="gray"),
+                            rx.text(
+                                GeneratorState.generated_apps.length(),
                                 size="5",
-                            weight="bold",
-                            color="blue",
+                                weight="bold",
+                                color="blue",
                             ),
                             spacing="1",
                         ),
@@ -1476,14 +1539,12 @@ def index() -> rx.Component:
                             GeneratorState.generated_apps,
                             lambda a: rx.badge(
                                 rx.cond(
-                                    GeneratorState.app_health.get(a["name"], "down")
-                                    == "up",
+                                    GeneratorState.app_health.get(a["name"], "down") == "up",
                                     f"{a['name']}:{a['port']} up",
                                     f"{a['name']}:{a['port']} down",
                                 ),
                                 color=rx.cond(
-                                    GeneratorState.app_health.get(a["name"], "down")
-                                    == "up",
+                                    GeneratorState.app_health.get(a["name"], "down") == "up",
                                     "green",
                                     "red",
                                 ),
@@ -1578,8 +1639,8 @@ def index() -> rx.Component:
                         ),
                     ),
                     # Success message with preview link
-                                rx.cond(
-                                    GeneratorState.generation_status == "success",
+                    rx.cond(
+                        GeneratorState.generation_status == "success",
                         rx.card(
                             rx.vstack(
                                 rx.hstack(
@@ -1711,9 +1772,7 @@ def index() -> rx.Component:
                             rx.vstack(
                                 rx.text("🛍️", size="8"),
                                 rx.heading("E-commerce", size="4"),
-                                rx.text(
-                                    "Online store with cart", size="2", color="gray"
-                                ),
+                                rx.text("Online store with cart", size="2", color="gray"),
                                 rx.button("Use Template", variant="soft", size="2"),
                                 spacing="3",
                                 align="center",
@@ -1724,9 +1783,7 @@ def index() -> rx.Component:
                             rx.vstack(
                                 rx.text("📝", size="8"),
                                 rx.heading("CMS", size="4"),
-                                rx.text(
-                                    "Content management system", size="2", color="gray"
-                                ),
+                                rx.text("Content management system", size="2", color="gray"),
                                 rx.button("Use Template", variant="soft", size="2"),
                                 spacing="3",
                                 align="center",

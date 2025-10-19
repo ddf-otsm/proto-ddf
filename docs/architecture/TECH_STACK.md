@@ -54,7 +54,7 @@ def index() -> rx.Component:
 function Index() {
   return jsx("div", {
     css: { /* compiled styles */ }
-  }, 
+  },
     jsx("h1", { /* heading props */ }, "My App"),
     jsx("p", { /* text props */ }, "Hello World")
   );
@@ -261,7 +261,7 @@ You're essentially writing Python that gets compiled into a modern React applica
 
 ---
 
-**Next Steps**: 
+**Next Steps**:
 - See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture
 - See [EXAMPLES.md](EXAMPLES.md) for real-world implementations
 - See [GENERATED_APPS.md](../generated-apps/README.md) for app-specific documentation

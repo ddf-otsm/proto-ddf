@@ -84,9 +84,3 @@ When adding new improvements:
 | Date | Version | Summary |
 |------|---------|---------|
 | Oct 16, 2025 | 1.0 | Initial improvements: Port registry, auto-start, process control |
-
-
-
-
-
-

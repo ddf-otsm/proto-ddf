@@ -349,7 +349,7 @@ kill_port_processes() {
 
     if [ -n "$PIDS" ]; then
         log_warning "Found process(es) on port $port ($port_name): $PIDS"
-        
+
         if [ "$kill_mode" -eq 9 ]; then
             log_progress "Force killing processes on port $port ($port_name): $PIDS"
             echo "$PIDS" | xargs kill -9 2>/dev/null || true
@@ -357,7 +357,7 @@ kill_port_processes() {
             log_progress "Terminating processes on port $port ($port_name): $PIDS"
             echo "$PIDS" | xargs kill -15 2>/dev/null || true
         fi
-        
+
         sleep 1
 
         # Check if still running

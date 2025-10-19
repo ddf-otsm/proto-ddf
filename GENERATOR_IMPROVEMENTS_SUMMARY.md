@@ -27,7 +27,7 @@ Users now see:
 
 **Before:**
 ```
-Successfully generated my news website! 
+Successfully generated my news website!
 Run it with: cd generated/my_news_website && ./run.sh
 ```
 
@@ -185,9 +185,3 @@ The generator now provides a **professional, modern UX** with:
 - ✅ Better error handling
 
 **Ready for Playwright test implementation!** 🧪
-
-
-
-
-
-

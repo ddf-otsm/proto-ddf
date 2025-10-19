@@ -37,7 +37,7 @@ Stage 1: Setup (5-10 min)
   ✅ Install Reflex framework
   ✅ Install dependencies (psutil, pytest, playwright)
   ✅ Install Playwright browsers
-  
+
 Stage 2: Start Generator (2-3 min)
   ✅ Kill existing processes
   ✅ Start Proto-DDF generator on port 3903
@@ -190,22 +190,22 @@ Before running the pipeline, verify:
 
   ☐ Jenkins is installed
     $ which jenkins
-    
+
   ☐ Jenkins can start
     $ jenkins --version
-    
+
   ☐ Proto-DDF repo is ready
     $ cd /Users/luismartins/local_repos/proto-ddf && git status
-    
+
   ☐ Jenkinsfile.e2e exists
     $ ls -la Jenkinsfile.e2e
-    
+
   ☐ Python venv exists
     $ ./venv/bin/python --version
-    
+
   ☐ Port 3903 is available
     $ lsof -i :3903 || echo "Port available"
-    
+
   ☐ Generated apps directory exists
     $ ls -la generated/
 

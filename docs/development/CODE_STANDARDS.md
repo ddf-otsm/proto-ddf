@@ -9,26 +9,26 @@
 def function_name(param1: Type, param2: Type) -> ReturnType:
     """
     Brief description of what the function does.
-    
+
     Longer description if needed, explaining the purpose,
     behavior, and any important details about the function.
-    
+
     Args:
         param1: Description of param1 and its expected values
         param2: Description of param2 and any constraints
-        
+
     Returns:
         Description of return value and its type
-        
+
     Raises:
         ValueError: When param1 is invalid
         ConnectionError: When network connection fails
-        
+
     Example:
         >>> result = function_name("test", 42)
         >>> print(result)
         "processed test with 42"
-        
+
     Note:
         Any important implementation details or gotchas
     """
@@ -39,15 +39,15 @@ def function_name(param1: Type, param2: Type) -> ReturnType:
 class ClassName(rx.State):
     """
     Brief description of the class purpose.
-    
+
     This class manages [specific functionality] and provides
     [key features]. It handles [important behaviors] and
     maintains [state information].
-    
+
     Attributes:
         attribute1: Description of what this stores
         attribute2: Description of this attribute's purpose
-        
+
     Example:
         >>> state = ClassName()
         >>> state.method_name()
@@ -221,7 +221,7 @@ def risky_operation(self):
             "result_count": len(result)
         })
         return result
-        
+
     except ValidationError as e:
         logger.warning("Validation failed", extra={
             "error": str(e),
@@ -229,7 +229,7 @@ def risky_operation(self):
         })
         self.integration_message = f"Validation error: {str(e)}"
         return None
-        
+
     except ConnectionError as e:
         logger.error("Connection failed", extra={
             "error": str(e),
@@ -237,7 +237,7 @@ def risky_operation(self):
         })
         self.integration_message = "Connection failed. Please try again."
         return None
-        
+
     except Exception as e:
         logger.critical("Unexpected error", extra={
             "error": str(e),

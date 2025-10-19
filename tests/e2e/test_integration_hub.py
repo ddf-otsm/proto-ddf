@@ -350,9 +350,7 @@ class TestIntegrationHubLogsAndStatistics:
 
             # Check that statistics have updated
             # At minimum, the successful syncs should increase
-            successful_stat = (
-                page.locator("text=Successful").locator("..").locator("text=/\\d+/")
-            )
+            successful_stat = page.locator("text=Successful").locator("..").locator("text=/\\d+/")
             expect(successful_stat).to_be_visible()
 
             logger.info("✅ Statistics updated after sync")

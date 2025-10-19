@@ -93,7 +93,7 @@ GET    /api/app/{id}/status   Get app status
 
 ### 3. Port Registry System
 
-**Purpose:** 
+**Purpose:**
 Centralized port management to prevent conflicts and ensure stable, persistent port assignments.
 
 **Design:**
@@ -254,7 +254,7 @@ Continuous (every 5-60s):
 Reserved Ports:
   - Generator frontend (e.g., 3797)
   - Generator backend (e.g., 3539)
-  
+
 Per-App Ports:
   - App1 frontend (e.g., 4001)
   - App1 backend (e.g., 4002)
@@ -503,6 +503,6 @@ CMD ["./run.sh"]
 
 ---
 
-**Last Updated:** October 17, 2025  
-**Version:** 1.0  
+**Last Updated:** October 17, 2025
+**Version:** 1.0
 **Status:** Production Ready ✅

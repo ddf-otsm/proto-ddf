@@ -6,7 +6,7 @@
 
 When the **unauthorized Jenkins** (regular version) was running on port 8080, it used `~/.jenkins/` as its `JENKINS_HOME` directory. This is where it stored:
 - ✅ Job configurations
-- ✅ Build history  
+- ✅ Build history
 - ✅ Plugin data
 - ✅ User configurations
 - ✅ System settings
@@ -43,7 +43,7 @@ Key Contents:
 
 ### Jobs Found
 1. **deployer-deployment** (Oct 15)
-2. **deployer-local** (Oct 15)  
+2. **deployer-local** (Oct 15)
 3. **proto-ddf-e2e-test** (Oct 17) - The "Hello World" success we verified!
 
 ---
@@ -64,7 +64,7 @@ Key Contents:
 ```
 ~/.jenkins/jobs/
   ├── proto-ddf-e2e-test ✅ (exists here, Build #1 SUCCESS)
-  
+
 /opt/homebrew/var/jenkins_home/jobs/
   └── (empty or different jobs)
 ```
@@ -317,9 +317,6 @@ We chose **jenkins-lts** with brew home because:
 
 ---
 
-**Created**: October 17, 2025  
-**Status**: Explained and Documented  
+**Created**: October 17, 2025
+**Status**: Explained and Documented
 **Recommended Action**: Clean slate (remove ~/.jenkins)
-
-
-

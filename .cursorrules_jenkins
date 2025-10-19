@@ -56,7 +56,7 @@ if [ -n "$JENKINS_PROCS" ]; then
     echo "⚠️  Existing Jenkins process(es) found:"
     echo "$JENKINS_PROCS"
     echo ""
-    
+
     # Check if on correct port (17843)
     if echo "$JENKINS_PROCS" | grep -q "17843"; then
         echo "✅ Jenkins already running on CORRECT port 17843"
@@ -107,11 +107,11 @@ jenkins_api() {
     local method="$1"
     local endpoint="$2"
     local data="$3"
-    
+
     local crumb_response=$(jenkins_get_crumb)
     local crumb_field=$(echo "$crumb_response" | jq -r '.crumbRequestField')
     local crumb_value=$(echo "$crumb_response" | jq -r '.crumb')
-    
+
     if [ "$method" = "GET" ]; then
         curl -s -u "$JENKINS_USER:$JENKINS_PASS" \
             "$JENKINS_URL$endpoint"
@@ -175,22 +175,22 @@ jenkins_wait_for_build() {
     local build_number="$2"
     local max_wait="${3:-600}"  # Default 10 minutes
     local elapsed=0
-    
+
     echo "⏳ Waiting for build $job_name #$build_number to complete..."
-    
+
     while [ $elapsed -lt $max_wait ]; do
         local status=$(jenkins_build_status "$job_name" "$build_number" | jq -r '.result')
-        
+
         if [ "$status" != "null" ] && [ -n "$status" ]; then
             echo "✅ Build completed with status: $status"
             return 0
         fi
-        
+
         sleep 5
         elapsed=$((elapsed + 5))
         echo "   Waiting... ${elapsed}s"
     done
-    
+
     echo "❌ Build did not complete within ${max_wait}s"
     return 1
 }
@@ -287,7 +287,7 @@ if jenkins_wait_for_build "proto-ddf-e2e" "$BUILD_NUMBER" 600; then
     echo "[6/6] Getting results..."
     STATUS=$(jenkins_build_status "proto-ddf-e2e" "$BUILD_NUMBER" | jq -r '.result')
     DURATION=$(jenkins_build_status "proto-ddf-e2e" "$BUILD_NUMBER" | jq -r '.duration')
-    
+
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "📊 Build Results"
@@ -434,22 +434,18 @@ Add to all relevant docs:
 📍 Correct Instance:
   Port: 17843
   URL: http://localhost:17843
-  
+
 🔧 Management:
   Start:   ~/vars/jenkins_start.sh
   Stop:    ~/vars/jenkins_stop.sh
   Status:  ~/vars/jenkins_status.sh
-  
+
 📡 API Helpers:
   Load:    source ~/vars/jenkins_api_helpers.sh
   Version: jenkins_version
   Jobs:    jenkins_list_jobs
   Build:   jenkins_build_job <name>
   Status:  jenkins_build_status <name> <num>
-  
+
 📖 Full docs: .cursorrules_jenkins
 ```
-
-
-
-

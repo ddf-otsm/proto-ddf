@@ -111,13 +111,13 @@ def retry_with_backoff(
         @wraps(func)
         def wrapper(*args, **kwargs):
             last_exception = None
-            
+
             for attempt in range(max_retries + 1):
                 try:
                     return func(*args, **kwargs)
                 except (ConnectionError, TimeoutError) as e:
                     last_exception = e
-                    
+
                     if attempt == max_retries:
                         logger.error("Max retries exceeded", extra={
                             "function": func.__name__,
@@ -125,12 +125,12 @@ def retry_with_backoff(
                             "error": str(e)
                         })
                         break
-                    
+
                     # Calculate delay with exponential backoff
                     delay = min(base_delay * (exponential_base ** attempt), max_delay)
                     if jitter:
                         delay *= (0.5 + random.random() * 0.5)
-                    
+
                     logger.warning("Retrying operation", extra={
                         "function": func.__name__,
                         "attempt": attempt + 1,
@@ -145,7 +145,7 @@ def retry_with_backoff(
                         "error": str(e)
                     })
                     raise
-            
+
             raise last_exception
         return wrapper
     return decorator
@@ -161,14 +161,14 @@ def connect_to_source(self, source_url: str):
 ```python
 class CircuitBreaker:
     """Circuit breaker for external service calls."""
-    
+
     def __init__(self, failure_threshold: int = 5, timeout: float = 60.0):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
         self.failure_count = 0
         self.last_failure_time = None
         self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
-    
+
     def call(self, func, *args, **kwargs):
         """Execute function with circuit breaker protection."""
         if self.state == "OPEN":
@@ -180,7 +180,7 @@ class CircuitBreaker:
                     system="circuit_breaker",
                     operation=func.__name__
                 )
-        
+
         try:
             result = func(*args, **kwargs)
             self._on_success()
@@ -188,17 +188,17 @@ class CircuitBreaker:
         except Exception as e:
             self._on_failure()
             raise
-    
+
     def _on_success(self):
         """Handle successful call."""
         self.failure_count = 0
         self.state = "CLOSED"
-    
+
     def _on_failure(self):
         """Handle failed call."""
         self.failure_count += 1
         self.last_failure_time = time.time()
-        
+
         if self.failure_count >= self.failure_threshold:
             self.state = "OPEN"
             logger.warning("Circuit breaker opened", extra={
@@ -219,7 +219,7 @@ def call_external_api(self, endpoint: str):
 ```python
 class ErrorMessageProvider:
     """Provides user-friendly error messages."""
-    
+
     ERROR_TEMPLATES = {
         "validation": {
             "project_name_required": "Please provide a project name",
@@ -237,12 +237,12 @@ class ErrorMessageProvider:
             "timeout": "Request timed out. The service may be slow, please try again"
         }
     }
-    
+
     @classmethod
     def get_message(cls, category: str, error_code: str, **context) -> str:
         """Get user-friendly error message."""
         template = cls.ERROR_TEMPLATES.get(category, {}).get(error_code, "An error occurred")
-        
+
         # Format template with context
         try:
             return template.format(**context)
@@ -260,14 +260,14 @@ def enhance_error_context(error: Exception, context: dict) -> dict:
         "timestamp": datetime.utcnow().isoformat(),
         **context
     }
-    
+
     # Add system context
     enhanced_context.update({
         "python_version": sys.version,
         "platform": platform.platform(),
         "memory_usage": psutil.virtual_memory().percent
     })
-    
+
     return enhanced_context
 ```
 
@@ -277,12 +277,12 @@ def enhance_error_context(error: Exception, context: dict) -> dict:
 ```python
 class State(rx.State):
     """Enhanced state with error handling."""
-    
+
     # Error state
     error_message: str = ""
     error_type: str = ""
     error_context: Dict[str, Any] = {}
-    
+
     def handle_error(self, error: Exception, operation: str, **context):
         """Handle errors with proper state management."""
         error_context = enhance_error_context(error, {
@@ -290,10 +290,10 @@ class State(rx.State):
             "user_id": getattr(self, 'user_id', 'anonymous'),
             **context
         })
-        
+
         # Log error
         logger.error("Operation failed", extra=error_context, exc_info=True)
-        
+
         # Update state
         self.error_message = ErrorMessageProvider.get_message(
             self._categorize_error(error),
@@ -302,10 +302,10 @@ class State(rx.State):
         )
         self.error_type = type(error).__name__
         self.error_context = error_context
-        
+
         # Clear error after delay
         self._schedule_error_clear()
-    
+
     def _categorize_error(self, error: Exception) -> str:
         """Categorize error for message lookup."""
         if isinstance(error, ValidationError):
@@ -316,7 +316,7 @@ class State(rx.State):
             return "integration"
         else:
             return "general"
-    
+
     def _get_error_code(self, error: Exception) -> str:
         """Get error code for message lookup."""
         if isinstance(error, ValidationError):
@@ -330,7 +330,7 @@ class State(rx.State):
             elif "disk" in str(error):
                 return "disk_space_low"
         return "general_error"
-    
+
     def _schedule_error_clear(self):
         """Schedule error message clearing."""
         # Clear error after 5 seconds
@@ -400,7 +400,7 @@ async def generate_app(self):
                 field="project_name",
                 value=self.project_name
             )
-        
+
         if len(self.project_name) < 3:
             raise ValidationError(
                 "Project name must be at least 3 characters",
@@ -408,7 +408,7 @@ async def generate_app(self):
                 value=self.project_name,
                 min_length=3
             )
-        
+
         # Port allocation with retry
         try:
             ports = PORT_REGISTRY.reserve_pair(self.project_name)
@@ -419,26 +419,26 @@ async def generate_app(self):
             })
             await asyncio.sleep(1.0)
             ports = PORT_REGISTRY.reserve_pair(self.project_name)
-        
+
         # Code generation
         with log_operation("code_generation", app_name=self.project_name):
             await self._generate_app_code(ports)
-        
+
         # Success
         self.generation_status = "success"
         self.generation_message = f"Successfully generated {self.project_name}!"
-        
+
     except ValidationError as e:
-        self.handle_error(e, "app_generation", 
+        self.handle_error(e, "app_generation",
                          validation_field=e.field,
                          validation_value=e.value)
         self.generation_status = "error"
-        
+
     except SystemError as e:
         self.handle_error(e, "app_generation",
                          system_component=e.component)
         self.generation_status = "error"
-        
+
     except Exception as e:
         self.handle_error(e, "app_generation")
         self.generation_status = "error"
@@ -458,7 +458,7 @@ def connect_source(self):
                 field="selected_source",
                 value=self.selected_source
             )
-        
+
         # Test connection
         if not self._test_connection(self.selected_source):
             raise IntegrationError(
@@ -467,23 +467,23 @@ def connect_source(self):
                 operation="connection_test",
                 source_type=self.selected_source
             )
-        
+
         # Load data
         self.source_records = self._load_source_data(self.selected_source)
-        
+
         # Success
         self.integration_status = IntegrationStatus.SUCCESS
         self.integration_message = f"Connected to {self.selected_source}"
-        
+
     except ValidationError as e:
         self.handle_error(e, "source_connection")
         self.integration_status = IntegrationStatus.ERROR
-        
+
     except IntegrationError as e:
         self.handle_error(e, "source_connection",
                          source_type=self.selected_source)
         self.integration_status = IntegrationStatus.ERROR
-        
+
     except Exception as e:
         self.handle_error(e, "source_connection")
         self.integration_status = IntegrationStatus.ERROR
@@ -497,25 +497,25 @@ def connect_source(self):
 ```python
 class ErrorTracker:
     """Track and analyze application errors."""
-    
+
     def __init__(self):
         self.error_counts = Counter()
         self.error_types = Counter()
         self.error_timeline = []
-    
+
     def track_error(self, error: Exception, context: dict):
         """Track error occurrence."""
         error_key = f"{type(error).__name__}:{str(error)}"
         self.error_counts[error_key] += 1
         self.error_types[type(error).__name__] += 1
-        
+
         self.error_timeline.append({
             "timestamp": datetime.utcnow().isoformat(),
             "error_type": type(error).__name__,
             "error_message": str(error),
             "context": context
         })
-    
+
     def get_error_summary(self) -> dict:
         """Get error summary for monitoring."""
         return {
@@ -533,12 +533,12 @@ class ErrorTracker:
 def check_critical_errors():
     """Check for critical errors that need immediate attention."""
     recent_errors = get_recent_errors(minutes=5)
-    
+
     critical_errors = [
         error for error in recent_errors
         if error['level'] == 'CRITICAL'
     ]
-    
+
     if len(critical_errors) > 3:
         send_alert("High critical error rate", {
             "error_count": len(critical_errors),

@@ -39,9 +39,7 @@ class TestAppGeneration:
         app_module_dir = app_dir / "test_stock_market_app"
         assert app_module_dir.exists(), "App module directory should exist"
         assert (app_module_dir / "__init__.py").exists(), "__init__.py should exist"
-        assert (app_module_dir / "test_stock_market.py").exists(), (
-            "Main app file should exist"
-        )
+        assert (app_module_dir / "test_stock_market.py").exists(), "Main app file should exist"
 
     def test_generated_app_rxconfig(self):
         """Test that rxconfig.py is correctly configured."""
@@ -63,9 +61,7 @@ class TestAppGeneration:
 
     def test_generated_app_main_file(self):
         """Test that the main app file is correctly generated."""
-        main_file = Path(
-            "generated/test_stock_market/test_stock_market_app/test_stock_market.py"
-        )
+        main_file = Path("generated/test_stock_market/test_stock_market_app/test_stock_market.py")
         assert main_file.exists(), "Main app file should exist"
 
         content = main_file.read_text()
@@ -133,9 +129,7 @@ class TestAppGeneration:
             timeout=10,
         )
 
-        assert result.returncode == 0, (
-            f"App should import successfully: {result.stderr}"
-        )
+        assert result.returncode == 0, f"App should import successfully: {result.stderr}"
         assert "OK" in result.stdout, "Import should succeed"
 
     def test_port_assignment(self):
@@ -158,19 +152,13 @@ class TestAppGeneration:
 
         # Check port range
         assert 3000 <= backend_port <= 5000, "Backend port should be in range 3000-5000"
-        assert 3000 <= frontend_port <= 5000, (
-            "Frontend port should be in range 3000-5000"
-        )
+        assert 3000 <= frontend_port <= 5000, "Frontend port should be in range 3000-5000"
 
         # Check ports are different
-        assert backend_port != frontend_port, (
-            "Backend and frontend ports should be different"
-        )
+        assert backend_port != frontend_port, "Backend and frontend ports should be different"
 
         # Check frontend is backend + 1
-        assert frontend_port == backend_port + 1, (
-            "Frontend port should be backend port + 1"
-        )
+        assert frontend_port == backend_port + 1, "Frontend port should be backend port + 1"
 
 
 class TestAppNaming:
@@ -182,32 +170,31 @@ class TestAppNaming:
 
         # The project name was "Test Stock Market" but directory should be "test_stock_market"
         assert app_dir.exists(), "Directory should use underscores"
-        assert not Path("generated/Test Stock Market").exists(), (
-            "Should not use spaces in directory name"
-        )
+        assert not Path(
+            "generated/Test Stock Market"
+        ).exists(), "Should not use spaces in directory name"
 
     def test_module_naming_consistency(self):
         """Test that module names are consistent throughout."""
         app_dir = Path("generated/test_stock_market")
 
         # Check directory names match
-        assert (app_dir / "test_stock_market_app").exists(), (
-            "App module directory should match naming"
-        )
+        assert (
+            app_dir / "test_stock_market_app"
+        ).exists(), "App module directory should match naming"
 
         # Check file names match
-        assert (app_dir / "test_stock_market_app" / "test_stock_market.py").exists(), (
-            "Main app file should match naming"
-        )
+        assert (
+            app_dir / "test_stock_market_app" / "test_stock_market.py"
+        ).exists(), "Main app file should match naming"
 
         # Check rxconfig references match
         rxconfig_content = (app_dir / "rxconfig.py").read_text()
-        assert 'app_name="test_stock_market_app"' in rxconfig_content, (
-            "rxconfig app_name should match"
-        )
         assert (
-            'app_module_import="test_stock_market_app.test_stock_market"'
-            in rxconfig_content
+            'app_name="test_stock_market_app"' in rxconfig_content
+        ), "rxconfig app_name should match"
+        assert (
+            'app_module_import="test_stock_market_app.test_stock_market"' in rxconfig_content
         ), "rxconfig import path should match"
 
 
@@ -216,9 +203,7 @@ class TestGeneratedAppContent:
 
     def test_app_displays_project_name(self):
         """Test that the generated app displays the correct project name."""
-        main_file = Path(
-            "generated/test_stock_market/test_stock_market_app/test_stock_market.py"
-        )
+        main_file = Path("generated/test_stock_market/test_stock_market_app/test_stock_market.py")
         content = main_file.read_text()
 
         # Check that project name appears in the app
@@ -226,9 +211,7 @@ class TestGeneratedAppContent:
 
     def test_app_displays_description(self):
         """Test that the generated app displays the project description."""
-        main_file = Path(
-            "generated/test_stock_market/test_stock_market_app/test_stock_market.py"
-        )
+        main_file = Path("generated/test_stock_market/test_stock_market_app/test_stock_market.py")
         content = main_file.read_text()
 
         # The description should be in the file

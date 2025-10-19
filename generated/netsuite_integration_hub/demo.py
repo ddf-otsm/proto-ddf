@@ -13,9 +13,7 @@ def demo_features():
     print("\n📁 Supported Data Sources:")
     print("  • CSV File       📄  - Import customer data from CSV files")
     print("  • JSON API       🔗  - Connect to JSON REST endpoints")
-    print(
-        "  • Database       💾  - Direct database connections (PostgreSQL, MySQL, etc.)"
-    )
+    print("  • Database       💾  - Direct database connections (PostgreSQL, MySQL, etc.)")
     print("  • REST API       🌐  - Generic REST API integration")
     print("  • Salesforce     ☁️  - Salesforce CRM connector")
     print("  • Webhook        🔔  - Real-time webhook data receiver")
@@ -23,12 +21,8 @@ def demo_features():
     print("\n🔀 Integration Workflow:")
     print("  Step 1: Select Data Source - Choose from 6 different source types")
     print("  Step 2: Connect to Source  - Real-time connection with progress tracking")
-    print(
-        "  Step 3: Auto-Map Fields    - Intelligent field mapping with pattern recognition"
-    )
-    print(
-        "  Step 4: Sync to NetSuite   - Real-time sync with progress and error handling"
-    )
+    print("  Step 3: Auto-Map Fields    - Intelligent field mapping with pattern recognition")
+    print("  Step 4: Sync to NetSuite   - Real-time sync with progress and error handling")
     print("  Step 5: Monitor & Track    - View statistics, logs, and synced records")
 
     print("\n📊 Dashboard Features:")
@@ -41,9 +35,7 @@ def demo_features():
 
     print("\n🧠 Intelligent Field Mapping:")
     print("  • Auto-detects common field patterns (name, email, phone, etc.)")
-    print(
-        "  • Maps to NetSuite standard fields (Customer Name, Email, Phone, Address, Account ID)"
-    )
+    print("  • Maps to NetSuite standard fields (Customer Name, Email, Phone, Address, Account ID)")
     print("  • Handles different naming conventions across sources")
     print("  • Visual arrows show source → NetSuite field relationships")
 

@@ -43,25 +43,25 @@ def refresh_health(self):
 def is_port_available(port: int) -> bool:
     """
     Check if a port is available for binding.
-    
+
     This function tests port availability by attempting to bind to it.
     Used during port allocation to prevent conflicts.
-    
+
     Args:
         port: Port number to check (3000-5000 range)
-        
+
     Returns:
         bool: True if port is available, False if already in use
-        
+
     Raises:
         ValueError: If port is outside valid range (3000-5000)
-        
+
     Example:
         >>> is_port_available(3000)
         True
         >>> is_port_available(8080)  # Outside range
         False
-        
+
     Note:
         This function only checks availability, it doesn't reserve the port.
         Use PortRegistry.reserve_port() to actually allocate a port.
@@ -70,25 +70,25 @@ def is_port_available(port: int) -> bool:
 def find_available_port(start: int = 3000, end: int = 5000) -> int:
     """
     Find an available port in the specified range.
-    
+
     Searches for an available port by testing random ports in the range.
     Used for dynamic port allocation when specific ports are not required.
-    
+
     Args:
         start: Starting port number (inclusive, default: 3000)
         end: Ending port number (inclusive, default: 5000)
-        
+
     Returns:
         int: Available port number
-        
+
     Raises:
         RuntimeError: If no available port found after 100 attempts
-        
+
     Example:
         >>> port = find_available_port()
         >>> 3000 <= port <= 5000
         True
-        
+
     Note:
         This function uses random selection, so results may vary.
         For deterministic port allocation, use PortRegistry.
@@ -115,17 +115,17 @@ class State(rx.State):
 class GeneratorState(rx.State):
     """
     State management for the Proto-DDF generator interface.
-    
+
     This class manages the complete state of the application generator,
     including project settings, generated applications tracking, health
     monitoring, and generation workflow state.
-    
+
     State Categories:
         - Project Settings: Name, description, and configuration
         - Generated Apps: List of created applications with metadata
         - Health Tracking: Application status and port monitoring
         - Generation Status: Workflow progress and error handling
-    
+
     Attributes:
         project_name: Name of the project being generated
         project_description: Description of the project
@@ -136,14 +136,14 @@ class GeneratorState(rx.State):
         generation_progress: Progress percentage (0-100)
         generation_step: Current step description
         generation_message: Status message for user feedback
-    
+
     Example:
         >>> state = GeneratorState()
         >>> state.project_name = "My App"
         >>> state.generate_app()
         >>> state.generation_status
         'generating'
-    
+
     Note:
         This class uses Reflex's reactive state management,
         so all attribute changes trigger UI updates automatically.
@@ -170,32 +170,32 @@ class State(rx.State):
     # === Integration Control ===
     selected_source: str = ""
     """Currently selected data source type.
-    
+
     Valid values: CSV, JSON, Database, REST API, Salesforce, Webhook
     Used to determine which data source to connect to and process."""
-    
+
     integration_status: str = IntegrationStatus.IDLE
     """Current integration workflow status.
-    
+
     States: IDLE, CONNECTING, SYNCING, SUCCESS, ERROR
     Controls UI display and user interaction availability."""
-    
+
     progress: int = 0
     """Sync progress percentage (0-100).
-    
+
     Used for progress bars and user feedback during long operations.
     Automatically triggers UI updates when changed."""
-    
+
     # === Data Management ===
     source_records: List[Dict] = []
     """Raw records loaded from the selected data source.
-    
+
     Each record is a dictionary with field names as keys.
     Used for data preview and field mapping operations."""
-    
+
     mapped_records: List[Dict] = []
     """Records transformed to NetSuite format.
-    
+
     Contains the same data as source_records but with field names
     mapped to NetSuite standard field names."""
 ```
@@ -439,7 +439,7 @@ self.last_action_message = f"Failed to start {name}: {str(e)}"
 # IMPROVED (User-friendly error messages):
 class ErrorMessageProvider:
     """Provides user-friendly error messages."""
-    
+
     ERROR_TEMPLATES = {
         "validation": {
             "project_name_required": "Please provide a project name",
@@ -457,12 +457,12 @@ class ErrorMessageProvider:
             "timeout": "Request timed out. The service may be slow, please try again"
         }
     }
-    
+
     @classmethod
     def get_message(cls, category: str, error_code: str, **context) -> str:
         """Get user-friendly error message."""
         template = cls.ERROR_TEMPLATES.get(category, {}).get(error_code, "An error occurred")
-        
+
         try:
             return template.format(**context)
         except KeyError:
@@ -476,10 +476,10 @@ def handle_error(self, error: Exception, operation: str, **context):
         "user_id": getattr(self, 'user_id', 'anonymous'),
         **context
     })
-    
+
     # Log error
     logger.error("Operation failed", extra=error_context, exc_info=True)
-    
+
     # Update state with user-friendly message
     self.error_message = ErrorMessageProvider.get_message(
         self._categorize_error(error),
@@ -518,11 +518,11 @@ This module provides centralized configuration management for:
 
 Usage:
     from config.constants import BACKEND_PORT, FRONTEND_PORT
-    
+
     # Get configured ports
     backend = BACKEND_PORT
     frontend = FRONTEND_PORT
-    
+
     # Check port availability
     if is_port_available(backend):
         start_server(backend)
@@ -546,33 +546,33 @@ Format: JSON with port mappings and metadata."""
 def _is_port_available(port: int, host: str = "0.0.0.0") -> bool:
     """
     Check if a port is available for binding.
-    
+
     This function tests port availability by attempting to bind to it.
     Used during port allocation to prevent conflicts.
-    
+
     Args:
         port: Port number to check (3000-5000 range)
         host: Host interface to check (default: 0.0.0.0 for all interfaces)
-        
+
     Returns:
         bool: True if port is available, False if already in use
-        
+
     Raises:
         ValueError: If port is outside valid range (3000-5000)
-        
+
     Example:
         >>> is_port_available(3000)
         True
         >>> is_port_available(8080)  # Outside range
         False
-        
+
     Note:
         This function only checks availability, it doesn't reserve the port.
         Use PortRegistry.reserve_port() to actually allocate a port.
     """
     if not (3000 <= port <= 5000):
         raise ValueError(f"Port {port} is outside valid range (3000-5000)")
-    
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -649,17 +649,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 class TestGeneratorState(unittest.TestCase):
     """
     Test suite for GeneratorState class functionality.
-    
+
     This test class validates the state management capabilities of the
     generator interface, including state initialization, updates, and
     reactive behavior.
-    
+
     Test Methods:
         - test_generator_state_class_exists: Verify class can be imported
         - test_initial_state: Verify initial state values
         - test_state_updates: Verify state update mechanisms
         - test_reactive_behavior: Verify UI reactivity
-    
+
     Test Data:
         - Sample project names and descriptions
         - Mock generated app configurations
@@ -670,13 +670,13 @@ class TestGeneratorState(unittest.TestCase):
     def test_generator_state_class_exists(self):
         """
         Test that GeneratorState class can be imported and instantiated.
-        
+
         This test validates:
         - Class can be imported from the correct module
         - Class can be instantiated without errors
         - Required attributes are present
         - Class inherits from rx.State correctly
-        
+
         Expected Behavior:
         - Import should succeed without errors
         - Instantiation should create valid state object
@@ -685,23 +685,23 @@ class TestGeneratorState(unittest.TestCase):
         """
         try:
             from proto_ddf_app.generator import GeneratorState
-            
+
             # Verify class can be instantiated
             state = GeneratorState()
             self.assertIsNotNone(state)
-            
+
             # Check that required attributes are defined in the class
             self.assertTrue(hasattr(GeneratorState, "project_name"))
             self.assertTrue(hasattr(GeneratorState, "project_description"))
             self.assertTrue(hasattr(GeneratorState, "generated_apps"))
             self.assertTrue(hasattr(GeneratorState, "generation_status"))
-            
+
             # Verify initial values
             self.assertEqual(state.project_name, "")
             self.assertEqual(state.project_description, "")
             self.assertEqual(state.generated_apps, [])
             self.assertEqual(state.generation_status, "idle")
-            
+
         except ImportError as e:
             self.fail(f"Failed to import GeneratorState: {e}")
         except Exception as e:

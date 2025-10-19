@@ -53,8 +53,8 @@
   - [x] Standardized error messages with user-friendly text
   - [x] Documented all class attributes with inline comments
   - [x] Fixed all linting issues
-  
-- [ ] Phase 2: Generated Apps Documentation  
+
+- [ ] Phase 2: Generated Apps Documentation
 - [ ] Phase 3: Configuration Documentation
 - [ ] Phase 4: Script Improvements
 - [ ] Phase 5: Testing

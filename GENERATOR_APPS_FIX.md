@@ -35,20 +35,20 @@ def load_generated_apps() -> List[Dict]:
     """Load all generated apps from the generated/ directory."""
     generated_dir = Path("generated")
     apps = []
-    
+
     if not generated_dir.exists():
         logger.warning("Generated directory does not exist")
         return apps
-    
+
     for app_dir in generated_dir.iterdir():
         if not app_dir.is_dir() or app_dir.name.startswith('.'):
             continue
-            
+
         # Skip if no rxconfig.py (not a valid app)
         rxconfig_path = app_dir / "rxconfig.py"
         if not rxconfig_path.exists():
             continue
-        
+
         # Try to read the rxconfig to get port info
         frontend_port = 3000
         try:
@@ -61,7 +61,7 @@ def load_generated_apps() -> List[Dict]:
                     break
         except Exception as e:
             logger.warning(f"Could not read port from {rxconfig_path}: {e}")
-        
+
         # Try to read description from main app file
         description = "A Reflex application"
         app_name = app_dir.name
@@ -79,10 +79,10 @@ def load_generated_apps() -> List[Dict]:
                             description = lines[2].strip()
             except Exception as e:
                 logger.warning(f"Could not read description from {main_app_file}: {e}")
-        
+
         # Format name from directory name
         display_name = app_name.replace('_', ' ').title()
-        
+
         app_info = {
             "name": display_name,
             "description": description,
@@ -93,7 +93,7 @@ def load_generated_apps() -> List[Dict]:
         }
         apps.append(app_info)
         logger.info(f"Loaded app: {display_name} at port {frontend_port}")
-    
+
     return apps
 ```
 
@@ -231,8 +231,3 @@ rx.button(
     variant="soft",
 )
 ```
-
-
-
-
-

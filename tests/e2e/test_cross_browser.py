@@ -12,9 +12,7 @@ logger = logging.getLogger(__name__)
 class TestCrossBrowserCompatibility:
     """Test app works across different browsers."""
 
-    def test_generator_loads_in_browser(
-        self, browser_name: str, base_url: str, playwright
-    ):
+    def test_generator_loads_in_browser(self, browser_name: str, base_url: str, playwright):
         """Test that generator loads in different browsers."""
         try:
             # Launch browser

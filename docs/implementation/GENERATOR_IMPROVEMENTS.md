@@ -46,7 +46,7 @@ Generating application code...
 
 **Before:**
 ```
-Successfully generated my news website! 
+Successfully generated my news website!
 Run it with: cd generated/my_news_website && ./run.sh
 ```
 
@@ -173,22 +173,22 @@ Each generated app includes:
 async def test_generator_progress_tracking(page):
     """Test that progress updates appear during generation."""
     await page.goto("http://127.0.0.1:4936")
-    
+
     # Fill in form
     await page.fill('input[placeholder*="my-dashboard"]', "Test App")
     await page.fill('textarea[placeholder*="Describe"]', "Test Description")
-    
+
     # Click generate
     await page.click('button:has-text("Generate App")')
-    
+
     # Verify progress updates
     await expect(page.locator('text=Validating')).to_be_visible()
     await expect(page.locator('text=Creating project')).to_be_visible()
     await expect(page.locator('text=Generating application')).to_be_visible()
-    
+
     # Wait for completion
     await expect(page.locator('text=Application ready!')).to_be_visible()
-    
+
     # Verify preview button
     preview_button = page.locator('button:has-text("Open App Preview")')
     await expect(preview_button).to_be_visible()
@@ -196,23 +196,23 @@ async def test_generator_progress_tracking(page):
 async def test_generator_preview_link(page):
     """Test that preview link works correctly."""
     await page.goto("http://127.0.0.1:4936")
-    
+
     # Generate app (assuming quick test app)
     await page.fill('input[placeholder*="my-dashboard"]', "Quick Test")
     await page.click('button:has-text("Generate App")')
-    
+
     # Wait for success
     await expect(page.locator('text=🎉 Successfully')).to_be_visible()
-    
+
     # Get the URL
     url_text = await page.locator('text=http://127.0.0.1:').text_content()
     assert url_text.startswith("http://127.0.0.1:")
-    
+
     # Click preview button (opens new tab)
     async with page.expect_popup() as popup_info:
         await page.click('button:has-text("Open App Preview")')
     new_page = await popup_info.value
-    
+
     # Verify new app loaded
     await expect(new_page.locator('text=Quick Test')).to_be_visible()
 ```
@@ -254,7 +254,7 @@ Look for error messages that indicate what step failed.
 ```python
 async def generate_app(self):
     # ... generate code ...
-    
+
     # Auto-start the app in background
     process = subprocess.Popen(
         ["bash", "run.sh"],
@@ -262,10 +262,10 @@ async def generate_app(self):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    
+
     # Wait for app to start
     await self._wait_for_app_ready(frontend_port)
-    
+
     # Now show preview link
     self.generated_app_url = app_url
 ```
@@ -292,9 +292,3 @@ Allow users to edit generated code directly in the browser.
 - [Architecture Guide](../architecture/ARCHITECTURE.md)
 - [Testing Guide](../testing/E2E_TESTING_GUIDE.md)
 - [Deployment Guide](../guides/EXAMPLES.md)
-
-
-
-
-
-

@@ -136,18 +136,18 @@ if [ "$JOB_EXISTS" = "200" ]; then
     print_success "Job already exists"
 else
     print_step "Creating new job '$JOB_NAME'..."
-    
+
     # Create the job
     curl -X POST \
         -H "Content-Type: application/xml" \
         --data-binary @/tmp/proto-ddf-e2e-config.xml \
         "$JENKINS_URL/createItem?name=$JOB_NAME" \
         2>/dev/null
-    
+
     # Verify job creation
     sleep 2
     JOB_CHECK=$(curl -s -o /dev/null -w "%{http_code}" "$JENKINS_URL/job/$JOB_NAME" 2>/dev/null)
-    
+
     if [ "$JOB_CHECK" = "200" ]; then
         print_success "Job '$JOB_NAME' created successfully"
     else
@@ -189,11 +189,11 @@ LAST_CONSOLE_LINE=0
 while [ $ELAPSED -lt $MAX_WAIT ]; do
     # Get build status
     BUILD_INFO=$(curl -s "$JENKINS_URL/job/$JOB_NAME/$LATEST_BUILD/api/json" 2>/dev/null || echo "{}")
-    
+
     BUILDING=$(echo "$BUILD_INFO" | grep -o '"building":true' || echo "")
     RESULT=$(echo "$BUILD_INFO" | grep -o '"result":"[A-Z]*"' | grep -o '[A-Z]*$' || echo "IN_PROGRESS")
     DURATION=$(echo "$BUILD_INFO" | grep -o '"duration":[0-9]*' | grep -o '[0-9]*$' || echo "0")
-    
+
     # Display status
     if [ -n "$BUILDING" ] || [ "$RESULT" = "IN_PROGRESS" ]; then
         ELAPSED_MIN=$((ELAPSED / 60))
@@ -202,7 +202,7 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
         echo ""
         break
     fi
-    
+
     sleep $POLL_INTERVAL
     ELAPSED=$((ELAPSED + POLL_INTERVAL))
 done

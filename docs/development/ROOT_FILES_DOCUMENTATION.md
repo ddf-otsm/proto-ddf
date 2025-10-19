@@ -72,7 +72,7 @@ dev-setup: ## Set up development environment with all dependencies
 	@echo "Setting up development environment..."
 	# Detailed setup steps
 
-# Testing targets  
+# Testing targets
 test-e2e: ## Run end-to-end tests with Playwright
 	@echo "Running E2E tests..."
 	# Test execution with parameters
@@ -185,11 +185,11 @@ This module provides centralized configuration management for:
 
 Usage:
     from config.constants import BACKEND_PORT, FRONTEND_PORT
-    
+
     # Get configured ports
     backend = BACKEND_PORT
     frontend = FRONTEND_PORT
-    
+
     # Check port availability
     if is_port_available(backend):
         start_server(backend)
@@ -241,33 +241,33 @@ Default frontend port for generated applications.
 def is_port_available(port: int, host: str = "0.0.0.0") -> bool:
     """
     Check if a port is available for binding.
-    
+
     This function tests port availability by attempting to bind to it.
     Used during port allocation to prevent conflicts.
-    
+
     Args:
         port: Port number to check (3000-5000 range)
         host: Host interface to check (default: 0.0.0.0 for all interfaces)
-        
+
     Returns:
         bool: True if port is available, False if already in use
-        
+
     Raises:
         ValueError: If port is outside valid range (3000-5000)
-        
+
     Example:
         >>> is_port_available(3000)
         True
         >>> is_port_available(8080)  # Outside range
         False
-        
+
     Note:
         This function only checks availability, it doesn't reserve the port.
         Use PortRegistry.reserve_port() to actually allocate a port.
     """
     if not (3000 <= port <= 5000):
         raise ValueError(f"Port {port} is outside valid range (3000-5000)")
-    
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

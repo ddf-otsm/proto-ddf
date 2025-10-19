@@ -1,6 +1,6 @@
 # Jenkins Pipeline Setup & Execution Guide
 
-**Status**: ✅ Ready for Production  
+**Status**: ✅ Ready for Production
 **Date**: October 17, 2025
 
 ---
@@ -109,9 +109,9 @@ chmod +x setup_jenkins_job.sh
 
 2. **Configure Pipeline**
    - **Description**: `Proto-DDF E2E Testing Pipeline`
-   
+
    - **Build Triggers**: (none for manual)
-   
+
    - **Pipeline** section:
      - Definition: `Pipeline script from SCM`
      - SCM: `Git`
@@ -119,7 +119,7 @@ chmod +x setup_jenkins_job.sh
      - Credentials: (none for local path)
      - Branches to build: `*/main`
      - Script Path: `Jenkinsfile.e2e`
-   
+
    - **Advanced Project Options**:
      - Lightweight checkout: ✅ checked
 
@@ -497,6 +497,6 @@ Before running the pipeline, verify:
 
 ---
 
-**Prepared by**: AI Assistant  
-**Status**: ✅ READY FOR JENKINS EXECUTION  
+**Prepared by**: AI Assistant
+**Status**: ✅ READY FOR JENKINS EXECUTION
 **Last Updated**: October 17, 2025

@@ -149,8 +149,3 @@ make test-unit
 - Ready for development and testing
 
 **The application is fixed and working correctly!** 🎉
-
-
-
-
-
