@@ -1,4 +1,4 @@
-# /merge
+# /mer-merge
 
 Safely merge an agent branch into the default branch using zero-trust validation, isolation testing, manual conflict handling, and rollback points. This follows the practices in the referenced mini prompt and the terminal command safety guidelines (timeouts, no chaining, short commands).
 

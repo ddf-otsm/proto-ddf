@@ -1,4 +1,4 @@
-# /browser-debug
+# /brd-browser-debug
 
 Use MCP browser tools to debug front‑end issues by combining automation with **console logs**, **network requests**, and **page snapshots**. Always set up monitoring **before** performing any action.
 

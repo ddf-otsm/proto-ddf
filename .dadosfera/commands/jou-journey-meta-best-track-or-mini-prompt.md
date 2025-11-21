@@ -1,4 +1,4 @@
-# /journey-meta-best-track-or-mini-prompt
+# /jou-journey-meta-best-track-or-mini-prompt
 
 Run the highest impact portion of `mini_prompt/lv1/meta_journey_mini_prompt.md`, choosing between the single most valuable mini prompt and the full “best track” (Core Development Loop) based on repository readiness.
 

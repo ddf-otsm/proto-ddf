@@ -1,4 +1,4 @@
-# /hardcoding-elimination
+# /hce-hardcoding-elimination
 
 Eliminate hardcoded ports, IPs, localhost references, and secrets; remove defaults and enforce fail-fast required parameters. Use the lv1 hardcoding mini prompts as the source of truth; follow their patterns and guard rails precisely.
 
