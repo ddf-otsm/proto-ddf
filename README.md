@@ -316,3 +316,25 @@ pip install -e ./reflex
 ---
 
 Built with ❤️ using [Reflex](https://reflex.dev) - Pure Python Web Apps
+
+## Resource Management
+
+This repository follows the Dadosfera Resource Management Standard.
+
+### Quick Commands
+```bash
+make detect-resources  # Check available resources
+make compose-up        # Start with resource limits
+make test-auto         # Run tests with optimal settings
+make compose-down      # Stop all services
+```
+
+### Resource Limits
+- Backend: 512MB RAM, 1.0 CPU
+- Frontend: 768MB RAM, 1.0 CPU
+- Database: 1GB RAM, 1.5 CPU
+
+See `compose.yml` for details.
+
+## CI/CD
+This project uses **Jenkins** for CI/CD. GitHub Actions are disabled for security and cost reasons.
