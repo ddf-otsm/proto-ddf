@@ -43,3 +43,4 @@ jenkins_admin_password*.txt
 .jenkins/
 jenkins.pid
 jenkins.log
+.mypy_cache/
