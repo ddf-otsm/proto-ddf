@@ -3,6 +3,66 @@
 # NetSuite Integration Hub - Run Script
 # This script sets up and runs the Reflex application
 
+# =============================================================================
+# COLOR DEFINITIONS (Level 1+ compliance)
+# =============================================================================
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# =============================================================================
+# LOG DIRECTORY SETUP (Level 2+ compliance)
+# =============================================================================
+SCRIPT_DIR_INIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT_INIT="$(cd "$SCRIPT_DIR_INIT/.." && pwd)"
+LOG_DIR="${PROJECT_ROOT_INIT}/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/run_$(date +%Y%m%d_%H%M%S).log"
+
+# =============================================================================
+# LOGGING FUNCTIONS (Level 2+ compliance)
+# =============================================================================
+log_message() {
+    local level="$1"
+    local message="$2"
+    local timestamp
+    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local formatted="[$timestamp] [$level] $message"
+
+    case "$level" in
+        INFO)    echo -e "${BLUE}$formatted${NC}" ;;
+        SUCCESS) echo -e "${GREEN}$formatted${NC}" ;;
+        WARNING) echo -e "${YELLOW}$formatted${NC}" ;;
+        ERROR)   echo -e "${RED}$formatted${NC}" >&2 ;;
+        DEBUG)   echo -e "${CYAN}$formatted${NC}" ;;
+        *)       echo "$formatted" ;;
+    esac
+
+    echo "$formatted" >> "$LOG_FILE"
+}
+
+log_info() { log_message "INFO" "$1"; }
+log_success() { log_message "SUCCESS" "$1"; }
+log_warning() { log_message "WARNING" "$1"; }
+log_error() { log_message "ERROR" "$1"; }
+log_debug() { [[ "${DEBUG:-false}" == "true" ]] && log_message "DEBUG" "$1"; }
+
+# =============================================================================
+# SIGNAL HANDLERS (Level 2+ compliance)
+# =============================================================================
+cleanup_on_exit() {
+    local exit_code=$?
+    log_info "Script finished with exit code: $exit_code"
+    log_info "Log file: $LOG_FILE"
+}
+
+trap 'log_warning "Received SIGINT. Shutting down..."; exit 130' SIGINT
+trap 'log_warning "Received SIGTERM. Shutting down..."; exit 143' SIGTERM
+trap cleanup_on_exit EXIT
+
 # Parse command line arguments
 PARAMS=""
 while (( "$#" )); do
