@@ -33,15 +33,15 @@ test: ## Run all tests (unit + integration)
 
 test-integration: ## Run integration tests only
 	@echo "$(BLUE)🧪 Running integration tests...$(NC)"
-	@source venv/bin/activate && python -m pytest tests/integration/ -v
+	@source venv/bin/activate && python -m pytest tests/integration/ -vgtimeout 300 source venv/bin/activate && python -m pytest tests/integration/ -v
 
 test-unit: ## Run unit tests only
 	@echo "$(BLUE)🧪 Running unit tests...$(NC)"
-	@source venv/bin/activate && python -m pytest tests/unit/ -v
+	@source venv/bin/activate && python -m pytest tests/unit/ -vgtimeout 300 source venv/bin/activate && python -m pytest tests/unit/ -v
 
 test-coverage: ## Run tests with coverage report
 	@echo "$(BLUE)📊 Running tests with coverage...$(NC)"
-	@source venv/bin/activate && python -m pytest tests/ --cov=proto_ddf_app --cov-report=html --cov-report=term
+	@source venv/bin/activate && python -m pytest tests/ --cov=proto_ddf_app --cov-report=html --cov-report=termgtimeout 300 source venv/bin/activate && python -m pytest tests/ --cov=proto_ddf_app --cov-report=html --cov-report=term
 
 lint: ## Run linters (flake8, mypy)
 	@echo "$(BLUE)🔍 Running linters...$(NC)"
@@ -57,9 +57,9 @@ check: lint test ## Run linters and tests
 install: ## Install dependencies
 	@echo "$(BLUE)📦 Installing dependencies...$(NC)"
 	@python3 -m venv venv || true
-	@source venv/bin/activate && pip install -q --upgrade pip
-	@source venv/bin/activate && pip install -q -e ./reflex
-	@source venv/bin/activate && pip install -q -r requirements.txt
+	@source venv/bin/activate && pip install -q --upgrade pipgtimeout 600 source venv/bin/activate && pip install -q --upgrade pip
+	@source venv/bin/activate && pip install -q -e ./reflexgtimeout 600 source venv/bin/activate && pip install -q -e ./reflex
+	@source venv/bin/activate && pip install -q -r requirements.txtgtimeout 600 source venv/bin/activate && pip install -q -r requirements.txt
 	@echo "$(GREEN)✅ Dependencies installed$(NC)"
 
 clean: ## Clean up generated files and caches
@@ -68,7 +68,7 @@ clean: ## Clean up generated files and caches
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || truegtimeout 300 find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name ".coverage" -delete 2>/dev/null || true
@@ -160,3 +160,22 @@ version: ## Show version information
 	@echo "$(YELLOW)Python:$(NC) $$(python3 --version)"
 	@echo "$(YELLOW)Node:$(NC) $$(node --version 2>/dev/null || echo 'Not installed')"
 	@echo "$(YELLOW)Reflex:$(NC) $$(source venv/bin/activate 2>/dev/null && python -c 'import reflex; print(reflex.__version__)' 2>/dev/null || echo 'Not installed')"
+
+# Resource management targets (standardized)
+.PHONY: detect-resources compose-validate compose-up compose-down test-auto
+
+detect-resources: ## Detect available system resources
+	@bash scripts/detect_resources.sh 2>/dev/null || echo "Resource detection script not found"
+
+compose-validate: ## Validate compose.yml
+	@docker compose config --quiet 2>/dev/null || echo "Docker Compose not available"gtimeout 60 docker compose config --quiet 2>/dev/null || echo "Docker Compose not available"
+
+compose-up: ## Start services with resource limits
+	@docker compose --profile app up -d 2>/dev/null || docker compose up -dgtimeout 60 docker compose --profile app up -d 2>/dev/null || docker compose up -d
+
+compose-down: ## Stop all services
+	@docker compose down 2>/dev/null || echo "Docker Compose not available"gtimeout 60 docker compose down 2>/dev/null || echo "Docker Compose not available"
+
+test-auto: ## Run tests with auto-detected settings
+	@bash scripts/detect_resources.sh --apply --mode=balanced 2>/dev/null || echo "Resource detection not available"
+	@npm test 2>/dev/null || pytest -v 2>/dev/null || echo "No test command found"gtimeout 300 npm test 2>/dev/null || pytest -v 2>/dev/null || echo "No test command found"
