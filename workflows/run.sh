@@ -111,6 +111,10 @@ while (( "$#" )); do
       echo "Usage: $0 [--param1=value1] [-p1 value1] [--param2=value2] [-p2 value2] [--log=LEVEL] [-l LEVEL]"
       exit 1
       ;;
+    --setup)
+      SETUP=true
+      shift
+      ;;
     *) # preserve positional arguments
       PARAMS="$PARAMS $1"
       shift
